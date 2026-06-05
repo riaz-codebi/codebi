@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="hero-content">
+        <div class="brand-hero">
+            <h1>CodeBI Solutions</h1>
+        </div>
+
+        <span class="eyebrow">Consulting • Analytics • AI • SaaS</span>
+
+        <h2>We build practical business technology using code and intelligence.</h2>
+
+        <p>
+            CodeBI Solutions helps businesses automate operations, modernize reporting,
+            build Python web applications, and turn messy business processes into scalable
+            digital platforms.
+        </p>
+
+        <div class="hero-actions">
+            <a class="btn primary" href="{{ url_for('main.services') }}">Explore Services</a>
+            <a class="btn secondary" href="{{ url_for('main.products') }}">View Products</a>
+        </div>
+    </div>
+
+    <div class="hero-card hero-image-card">
+        {% if hero_flyer_url %}
+            <div class="hero-image-wrapper">
+                <img id="heroFlyer" src="{{ hero_flyer_url }}" alt="CodeBI flyer" class="hero-flyer">
+                <div class="hero-overlay">
+                    <span>Click to enlarge</span>
+                </div>
+            </div>
+        {% else %}
+            <div class="hero-fallback">
+                <h3>Marketing flyer preview</h3>
+                <p>No flyer image was found in the static/flyers folder.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if hero_flyer_url %}
+<div class="modal-overlay" id="flyerModal" aria-hidden="true">
+    <div class="modal-content">
+        <button type="button" class="modal-close" id="flyerModalClose">×</button>
+        <img src="{{ hero_flyer_url }}" alt="Flyer full view" class="modal-flyer">
+    </div>
+</div>
+{% endif %}
+
+<section class="section">
+    <div class="hero-card content-card">
+        <h3>What CodeBI means</h3>
+        <p>
+            <strong>Code</strong> represents custom Python, Flask, FastAPI, automation,
+            and application development.
+        </p>
+        <p>
+            <strong>BI</strong> represents business intelligence, Power BI, analytics,
+            reporting, decision systems, and executive dashboards.
+        </p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <span class="eyebrow">Core Focus</span>
+        <h2>Technology that solves real operational problems</h2>
+        <p>
+            We focus on practical, high-impact systems for businesses that need better workflows,
+            better reporting, and smarter automation.
+        </p>
+    </div>
+
+    <div class="grid three">
+        <div class="card">
+            <h3>Python Web Apps</h3>
+            <p>Flask and FastAPI platforms for internal tools, client portals, SaaS products, and workflow systems.</p>
+        </div>
+
+        <div class="card">
+            <h3>Business Intelligence</h3>
+            <p>Power BI dashboards, KPI models, SQL reporting, Excel automation, and executive analytics.</p>
+        </div>
+
+        <div class="card">
+            <h3>AI Automation</h3>
+            <p>AI-assisted document processing, WhatsApp workflows, OCR, data extraction, and operational assistants.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section split">
+    <div>
+        <span class="eyebrow">Products</span>
+        <h2>Micro-SaaS products built for specific business pain points</h2>
+        <p>
+            CodeBI Solutions is also building focused products for financial tracking,
+            driver workflows, document capture, and field operations.
+        </p>
+        <a class="btn primary" href="{{ url_for('main.products') }}">See Product Portfolio</a>
+    </div>
+
+    <div class="product-preview">
+        <div class="mini-product">
+            <h3>Spend Buddy</h3>
+            <p>Simple expense and spend tracking through modern automation-first workflows.</p>
+        </div>
+
+        <div class="mini-product">
+            <h3>Trucker AI</h3>
+            <p>WhatsApp-native driver utility companion for route, load, document, and proof capture workflows.</p>
+        </div>
+
+        <div class="mini-product muted">
+            <h3>More Coming Soon</h3>
+            <p>Additional micro-SaaS products under the CodeBI Solutions portfolio.</p>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

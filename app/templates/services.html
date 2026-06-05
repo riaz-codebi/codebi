@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-hero">
+    <span class="eyebrow">Services</span>
+    <h1>Consulting services for analytics, automation, and custom applications</h1>
+    <p>
+        We help businesses move from manual work, spreadsheets, and disconnected tools
+        into scalable systems built with Python, BI, automation, and AI.
+    </p>
+</section>
+
+<section class="section">
+    <div class="grid three">
+
+        <div class="card">
+            <h3>Python Development</h3>
+            <p>Custom Python applications, scripts, automation tools, backend workflows, data pipelines, and business utilities.</p>
+        </div>
+
+        <div class="card">
+            <h3>Flask Applications</h3>
+            <p>Business portals, SaaS MVPs, internal tools, admin dashboards, and client-facing web applications using Flask and Jinja.</p>
+        </div>
+
+        <div class="card">
+            <h3>FastAPI Backends</h3>
+            <p>Modern APIs, webhook endpoints, mobile app backends, integrations, and high-performance service layers.</p>
+        </div>
+
+        <div class="card">
+            <h3>Power BI</h3>
+            <p>Executive dashboards, operational reporting, KPI models, data storytelling, Power Query, DAX, and embedded analytics.</p>
+        </div>
+
+        <div class="card">
+            <h3>Excel Automation</h3>
+            <p>Spreadsheet cleanup, reporting templates, automated calculations, CSV processing, and Excel-to-database workflows.</p>
+        </div>
+
+        <div class="card">
+            <h3>Analytics & BI Strategy</h3>
+            <p>Metric design, reporting architecture, performance dashboards, management reporting, and decision-support systems.</p>
+        </div>
+
+        <div class="card">
+            <h3>AI Solutions</h3>
+            <p>AI-assisted workflows, document analysis, OCR, summarization, classification, voice-to-data workflows, and LLM integration.</p>
+        </div>
+
+        <div class="card">
+            <h3>Business Automation</h3>
+            <p>Workflow automation, email automation, WhatsApp workflows, document routing, approval flows, and operational triggers.</p>
+        </div>
+
+        <div class="card">
+            <h3>SharePoint & Power Platform</h3>
+            <p>SharePoint lists, Power Apps, Power Automate, low-code modernization, and migration planning into Python SaaS platforms.</p>
+        </div>
+
+        <div class="card">
+            <h3>Healthcare & Operations Reporting</h3>
+            <p>Healthcare analytics, intake reporting, sales operations, productivity dashboards, and workflow visibility tools.</p>
+        </div>
+
+        <div class="card">
+            <h3>Client Portals</h3>
+            <p>Secure document portals, invoice views, report hubs, role-based access, and client-side SaaS interfaces.</p>
+        </div>
+
+        <div class="card">
+            <h3>Database & Cloud Integration</h3>
+            <p>Supabase, PostgreSQL, SQL reporting, storage buckets, schema design, API integration, and deployment planning.</p>
+        </div>
+
+    </div>
+</section>
+
+<section class="cta-section">
+    <h2>Need a practical technology partner?</h2>
+    <p>
+        CodeBI Solutions focuses on building systems that business users can actually use,
+        not just technical demos.
+    </p>
+    <a class="btn primary" href="{{ url_for('main.contact') }}">Start a Conversation</a>
+</section>
+
+{% endblock %}

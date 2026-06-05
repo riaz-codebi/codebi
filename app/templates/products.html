@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-hero">
+    <span class="eyebrow">Products</span>
+    <h1>Micro-SaaS products under the CodeBI Solutions portfolio</h1>
+    <p>
+        Focused products designed around real business workflows, lightweight adoption,
+        and automation-first user experiences.
+    </p>
+</section>
+
+<section class="section">
+    <div class="grid products-grid">
+
+        <div class="product-card">
+            <span class="product-status">In Development</span>
+            <h2>Spend Buddy</h2>
+            <p>
+                A simple expense and spend tracking assistant designed for practical,
+                low-friction financial visibility.
+            </p>
+
+            <ul>
+                <li>Expense capture</li>
+                <li>Smart categorization</li>
+                <li>Simple reporting</li>
+                <li>Automation-first workflow</li>
+            </ul>
+
+            <a class="btn secondary" href="#">Landing page coming soon</a>
+        </div>
+
+        <div class="product-card">
+            <span class="product-status">Concept / MVP</span>
+            <h2>Trucker AI</h2>
+            <p>
+                A WhatsApp-native driver utility companion for independent truckers,
+                owner-operators, and field logistics workflows.
+            </p>
+
+            <ul>
+                <li>Route and load workflow</li>
+                <li>Photo and proof capture</li>
+                <li>Driver-owned document vault</li>
+                <li>Broker/shareable evidence links</li>
+            </ul>
+
+            <a class="btn secondary" href="#">Landing page coming soon</a>
+        </div>
+
+        <div class="product-card muted">
+            <span class="product-status">Future Portfolio</span>
+            <h2>More Products Coming Soon</h2>
+            <p>
+                CodeBI Solutions will continue building focused products for small businesses,
+                field workers, analytics teams, and operations-heavy workflows.
+            </p>
+
+            <ul>
+                <li>AI document tools</li>
+                <li>Client portals</li>
+                <li>Workflow automation products</li>
+                <li>Industry-specific SaaS tools</li>
+            </ul>
+
+            <a class="btn secondary" href="#">Coming soon</a>
+        </div>
+
+    </div>
+</section>
+
+<section class="section media-section">
+    <div class="section-header">
+        <span class="eyebrow">Marketing Assets</span>
+        <h2>Ready for logos, flyers, videos, and product media</h2>
+        <p>
+            The folder structure already includes places for product logos, marketing flyers,
+            demo videos, downloads, and future Supabase-hosted assets.
+        </p>
+    </div>
+
+    <div class="asset-grid">
+        <div class="asset-box asset-card">
+            <h3>Brand Logo & Marketing Assets</h3>
+            <p>Browse the full logo and flyer collection on the dedicated assets page.</p>
+            <a class="btn secondary" href="{{ url_for('main.assets') }}">Go to Assets</a>
+        </div>
+
+        <div class="asset-box">Demo Videos</div>
+        <div class="asset-box">Product Downloads</div>
+        <div class="asset-box">Other Media</div>
+    </div>
+</section>
+
+{% endblock %}

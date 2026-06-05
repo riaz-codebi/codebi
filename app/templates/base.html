@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title or "CodeBI Solutions" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="CodeBI Solutions builds Python, Flask, FastAPI, Power BI, analytics, AI automation, and business intelligence solutions.">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header class="site-header">
+    <nav class="navbar">
+        <a href="{{ url_for('main.index') }}" class="brand">
+            <img src="{{ logo_url }}" alt="CodeBI logo" class="brand-image">
+        </a>
+
+        <button class="nav-toggle" id="navToggle">☰</button>
+
+        <div class="nav-links" id="navLinks">
+            <a href="{{ url_for('main.index') }}">Home</a>
+            <a href="{{ url_for('main.services') }}">Services</a>
+            <a href="{{ url_for('main.products') }}">Products</a>
+            <a href="{{ url_for('main.contact') }}">Contact</a>
+        </div>
+    </nav>
+</header>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div>
+        <strong>CodeBI Solutions</strong>
+        <p>Python applications, business intelligence, analytics, AI automation, and workflow platforms.</p>
+    </div>
+
+    <div>
+        <p>© 2026 CodeBI Solutions. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

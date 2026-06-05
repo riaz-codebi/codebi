@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-hero">
+    <span class="eyebrow">Assets</span>
+    <h1>Brand and marketing assets for CodeBI Solutions</h1>
+    <p>
+        This page shows the logo, marketing flyers, and asset galleries that are stored in the static folder.
+    </p>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <span class="eyebrow">Brand Logo</span>
+        <h2>Primary logo for the website and marketing materials</h2>
+        <p>
+            The brand logo is served from the static images folder and used across the site.
+        </p>
+    </div>
+
+    <div class="asset-grid">
+        <div class="asset-box asset-card logo-only">
+            <img src="{{ logo_url }}" alt="CodeBI logo" class="asset-logo">
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <span class="eyebrow">Flyers</span>
+        <h2>Available marketing flyers</h2>
+        <p>
+            Flyer images are loaded from the static images/flyers folder and shown below.
+        </p>
+    </div>
+
+    <div class="flyer-grid">
+        {% for flyer in flyer_urls %}
+            <div class="flyer-card">
+                <img src="{{ flyer }}" alt="Marketing flyer">
+            </div>
+        {% else %}
+            <div class="asset-box asset-card">
+                <p class="small-note">No flyers were found in the folder.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}
