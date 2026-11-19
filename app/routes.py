@@ -129,3 +129,13 @@ def assets():
 @main.route("/contact")
 def contact():
     return render_template("contact.html")
+
+
+@main.route("/privacy")
+def privacy():
+    return render_template("legal/privacy.html", title="Privacy Policy | CodeBI Solutions")
+
+
+@main.route("/terms")
+def terms():
+    return render_template("legal/terms.html", title="Terms of Service | CodeBI Solutions")

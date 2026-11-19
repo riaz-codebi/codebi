@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/legal.css') }}">{% endblock %}
+{% block auth_overlay %}{% endblock %}
+{% block content %}
+<article class="legal-document">
+    <header class="legal-heading">
+        <a class="legal-home" href="{{ url_for('main.index') }}">&larr; CodeBI Solutions</a>
+        <h1>{% block legal_title %}{% endblock %}</h1>
+        <p class="legal-updated">Last updated: November 19, 2026</p>
+    </header>
+    {% block legal_content %}{% endblock %}
+    <footer class="legal-contact">
+        <h2>Contact CodeBI</h2>
+        <p>For questions about this page or your account, email
+            <a href="mailto:contact@codebisolutions.com">contact@codebisolutions.com</a>.</p>
+        <nav aria-label="Related policies"><a href="{{ url_for('main.privacy') }}">Privacy policy</a><a href="{{ url_for('main.terms') }}">Terms of service</a></nav>
+    </footer>
+</article>
+{% endblock %}

@@ -8,6 +8,7 @@
     <meta name="description" content="CodeBI Solutions builds Python, Flask, FastAPI, Power BI, analytics, AI automation, and business intelligence solutions.">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_styles %}{% endblock %}
 </head>
 
 <body>
@@ -45,6 +46,7 @@
 
     <div>
         <p>© 2026 CodeBI Solutions. All rights reserved.</p>
+        <nav aria-label="Legal"><a href="{{ url_for('main.privacy') }}">Privacy policy</a> &middot; <a href="{{ url_for('main.terms') }}">Terms of service</a></nav>
     </div>
 </footer>
 
