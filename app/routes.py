@@ -61,32 +61,7 @@ def list_supabase_files(prefixes, extensions, exact_paths=None):
 
 @main.route("/")
 def index():
-    hero_flyer_url = None
-
-    if current_app.supabase:
-        flyer_urls = list_supabase_files(
-            [
-                "code-bi/marketing/flyers",
-                "marketing/flyers",
-                "flyers",
-            ],
-            (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"),
-            exact_paths=[
-                "marketing/flyers/flyer-codebi.png",
-                "flyer-codebi.png",
-            ],
-        )
-        if flyer_urls:
-            hero_flyer_url = flyer_urls[0]
-    else:
-        flyers_dir = os.path.join(current_app.static_folder, "images", "flyers")
-        if os.path.isdir(flyers_dir):
-            for filename in sorted(os.listdir(flyers_dir)):
-                if filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")):
-                    hero_flyer_url = url_for("static", filename=f"images/flyers/{filename}")
-                    break
-
-    return render_template("index.html", hero_flyer_url=hero_flyer_url)
+    return render_template("index.html")
 
 
 @main.route("/services")
@@ -126,9 +101,10 @@ def assets():
     return render_template("assets.html", flyer_urls=flyer_urls)
 
 
-@main.route("/contact")
+@main.route("/contact", methods=["GET", "POST"])
 def contact():
-    return render_template("contact.html")
+    from app.inquiries import inquiry_page
+    return inquiry_page("contact.html")
 
 
 @main.route("/privacy")

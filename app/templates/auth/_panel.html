@@ -1,0 +1,28 @@
+<section class="account-entry">
+    <a class="login-back" href="{{ url_for('main.index') }}">&larr; back</a>
+    <h1>Existing user sign-in</h1>
+    {% if auth_message %}<div class="auth-alert" role="alert">{{ auth_message }}</div>{% endif %}
+    {% if not auth_ready %}<div class="auth-alert" role="status">Sign-in configuration is pending. Please contact CodeBI.</div>{% endif %}
+    <div>
+        {% for provider, name in [('google', 'Google'), ('azure', 'Microsoft')] %}
+        <form method="post" action="{{ url_for('auth.start', provider=provider) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="provider-button" type="submit" {% if not auth_ready %}disabled{% endif %}>
+                {% if provider == 'google' %}
+                <img class="provider-mark google-mark" src="{{ url_for('static', filename='images/google-g.png') }}" width="20" height="20" alt="" aria-hidden="true">
+                {% else %}
+                <span class="provider-mark microsoft-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                {% endif %}
+                Continue with {{ name }}
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+    <fieldset class="email-preview" disabled>
+        <legend>Email sign-in</legend>
+        <label for="preview-email">Email</label>
+        <input id="preview-email" type="email" placeholder="you@example.com" autocomplete="off">
+        <label for="preview-password">Password</label>
+        <input id="preview-password" type="password" placeholder="Enter your password" autocomplete="off">
+    </fieldset>
+</section>

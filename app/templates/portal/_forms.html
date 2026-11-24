@@ -1,0 +1,17 @@
+{% macro field(name, label, type='text', required=false, hint='', readonly=false, maxlength=200) %}
+<div class="form-field {{ 'has-error' if errors.get(name) }}"><label for="{{ name }}">{{ label }}{% if required %}<span class="required"> *</span>{% endif %}</label><input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ values.get(name, '') }}" maxlength="{{ maxlength }}" {% if required %}required{% endif %} {% if readonly %}readonly{% endif %} {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% elif hint %}aria-describedby="{{ name }}-hint"{% endif %}>{% if errors.get(name) %}<span class="field-error" id="{{ name }}-error">{{ errors[name] }}</span>{% elif hint %}<small id="{{ name }}-hint">{{ hint }}</small>{% endif %}</div>
+{% endmacro %}
+{% macro checkbox(name, label, hint='') %}<label class="checkbox-field"><input type="checkbox" name="{{ name }}" value="on" {% if values.get(name) %}checked{% endif %}><span><strong>{{ label }}</strong>{% if hint %}<small>{{ hint }}</small>{% endif %}</span></label>{% endmacro %}
+
+{% macro searchable(name, label, required=false, disabled=false, placeholder='Select an option') %}
+<div class="form-field {{ 'has-error' if errors.get(name) }}">
+    <label for="{{ name }}">{{ label }}{% if required %}<span class="required"> *</span>{% endif %}</label>
+    <select id="{{ name }}" name="{{ name }}" data-searchable data-placeholder="{{ placeholder }}"
+        {% if required %}required{% endif %} {% if disabled %}disabled{% endif %}
+        {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}>
+        <option value="">{{ placeholder }}</option>
+        {% for option in choices[name] %}<option value="{{ option.value }}" {% if values.get(name) == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
+    </select>
+    {% if errors.get(name) %}<span class="field-error" id="{{ name }}-error">{{ errors[name] }}</span>{% endif %}
+</div>
+{% endmacro %}

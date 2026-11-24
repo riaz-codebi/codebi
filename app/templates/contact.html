@@ -1,50 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<section class="page-hero">
-    <span class="eyebrow">Contact</span>
-    <h1>Let’s discuss your application, analytics, or automation need</h1>
-    <p>
-        Whether you need a Python app, Power BI dashboard, AI automation, client portal,
-        or micro-SaaS MVP, CodeBI Solutions can help design and build it.
-    </p>
+<section class="section contact-inquiry">
+    <h1>Let’s find the right solution for you.</h1>
+    <p>Share your goals or challenges, and we’ll help you explore what’s possible.</p>
+    {% include '_inquiry_form.html' %}
 </section>
-
-<section class="section contact-section">
-    <div class="contact-card">
-        <h2>CodeBI Solutions</h2>
-
-        <p>
-            <strong>Focus:</strong> Python, Flask, FastAPI, Power BI, analytics,
-            AI automation, Excel, SharePoint, Power Platform, and SaaS development.
-        </p>
-
-        <p>
-            <strong>Email:</strong> contact@codebisolutions.com
-        </p>
-
-        <p>
-            <strong>Website:</strong> codebisolutions.com
-        </p>
-
-        <p class="small-note">
-            Contact form can be added later using Flask mail, Supabase, Formspree,
-            or a simple database-backed lead table.
-        </p>
-    </div>
-
-    <div class="contact-card dark">
-        <h2>Good fit for</h2>
-        <ul>
-            <li>Small businesses needing automation</li>
-            <li>Healthcare and operations reporting</li>
-            <li>Power BI and executive dashboards</li>
-            <li>Python SaaS MVPs</li>
-            <li>AI-assisted workflow tools</li>
-            <li>SharePoint / Power Platform modernization</li>
-        </ul>
-    </div>
-</section>
-
 {% endblock %}

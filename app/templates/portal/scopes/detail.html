@@ -1,0 +1,111 @@
+{% extends 'portal/base.html' %}
+{% block portal_content %}
+{% set scope = data.scope %}
+{% set transition_url = url_for('scopes.transition', client_id=client_id, sow_id=scope.id) %}
+{% set submitted = review_values|default({}) %}
+<a class="back-link" href="{{ url_for('scopes.index', client_id=client_id) }}">{{ icon('arrow') }}Back to scopes of work</a>
+<div class="page-heading scope-detail-heading">
+    <div>
+        <span class="breadcrumb">{{ data.client.name }} / {{ scope.sow_code or 'Scope of work' }}</span>
+        <h1>{{ scope.title }}</h1>
+    </div>
+    <span class="status-badge scope-status {{ scope.status }}">{{ statuses[scope.status] }}</span>
+</div>
+
+<div class="scope-detail-grid">
+    <div class="scope-detail-main">
+        <article class="form-panel scope-overview">
+            <div class="scope-overview-heading">
+                <h2 class="scope-section-title">Scope details</h2>
+                {% if data.can_edit or data.can_submit or data.can_return or data.can_review or data.can_start or data.can_complete %}
+                <div class="scope-actions">
+                    {% if data.can_edit %}
+                    <a class="admin-button secondary-button" href="{{ url_for('scopes.form', client_id=client_id, sow_id=scope.id) }}">Edit draft</a>
+                    {% endif %}
+                    {% for action, label, show in [
+                        ('submit', 'Submit to CodeBI', data.can_submit),
+                        ('return_to_draft', 'Return to draft', data.can_return),
+                        ('start_review', 'Start review', data.can_review),
+                        ('start_work', 'Start work', data.can_start),
+                        ('complete_work', 'Mark complete', data.can_complete)
+                    ] if show %}
+                    <form method="post" action="{{ transition_url }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="admin-button {{ 'secondary-button' if action == 'return_to_draft' }}" name="action" value="{{ action }}">{{ label }}</button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="scope-overview-facts">
+                <dl class="scope-metadata">
+                    <div><dt>Type</dt><dd>{{ scope.type_name }}</dd></div>
+                    <div><dt>Priority</dt><dd>{{ scope.priority|capitalize }}</dd></div>
+                    <div><dt>Desired completion</dt><dd>{{ scope.desired_completion_date or 'Not set' }}</dd></div>
+                    <div><dt>Created by</dt><dd>{{ scope.creator_name }}</dd></div>
+                </dl>
+                <div>
+                    <h3 class="scope-section-label">Solution interests</h3>
+                    <div class="scope-tool-tags">{% for tool in scope.tools %}<span>{{ tool }}</span>{% else %}<span>Not specified</span>{% endfor %}</div>
+                    {% if scope.other_tool_details %}<p class="scope-description scope-other-tool-description">{{ scope.other_tool_details }}</p>{% endif %}
+                </div>
+            </div>
+            <div>
+                <h3 class="scope-section-label">Description</h3>
+                <p class="scope-description">{{ scope.description }}</p>
+            </div>
+        </article>
+        {% include 'portal/scopes/_review.html' %}
+    </div>
+    <aside class="form-panel scope-activity-card">
+        {% if data.can_message %}
+        <form id="scope-message-composer" method="post" action="{{ transition_url }}#scope-message-composer" class="scope-review-form scope-message-composer">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-field">
+                <div class="scope-message-heading">
+                    <label for="scope-message">Message</label>
+                    <button class="icon-button" type="submit" name="action" value="send_message" aria-label="Send message" title="Send message">{{ icon('send') }}</button>
+                </div>
+                <textarea id="scope-message" name="body" rows="2" maxlength="10000" placeholder="Ask a question or share an update" required>{{ submitted.get('body', '') if submitted.get('action') == 'send_message' }}</textarea>
+            </div>
+        </form>
+        {% endif %}
+        <h2 id="scope-activity" class="scope-section-title">Activity</h2>
+        {% set labels = {
+            'created': 'Created', 'updated': 'Draft updated', 'request_approval': 'Sent for client approval',
+            'submit': 'Submitted to CodeBI', 'return_to_draft': 'Returned to draft',
+            'start_review': 'CodeBI review started', 'request_clarification': 'Clarification requested',
+            'reply': 'Clarification reply posted', 'send_message': 'Message sent', 'issue_estimate': 'Estimate sent',
+            'accept_estimate': 'Estimate accepted', 'reject_estimate': 'Estimate rejected',
+            'decline': 'Request declined by CodeBI', 'start_work': 'Work started',
+            'complete_work': 'Work completed', 'log_time': 'Time recorded'
+        } %}
+        <ol class="scope-history">
+            {% for event in data.history %}
+            <li>
+                <span class="scope-history-action">{{ labels.get(event.kind, event.kind|replace('_', ' ')|capitalize) }}</span>
+                <div class="scope-history-meta">
+                    <span>{{ event.actor }}{% if event.minutes %} &middot; {{ event.minutes }} min{% endif %}</span>
+                    <time datetime="{{ event.at }}">{{ event.at|central_time }}</time>
+                </div>
+                {% if event.message %}<p class="scope-history-message">{{ event.message }}</p>{% endif %}
+            </li>
+            {% else %}<li>No activity yet.</li>{% endfor %}
+        </ol>
+        {% if data.activity_page > 1 or data.has_older_activity %}
+        <nav class="scope-activity-pages" aria-label="Activity pages">
+            {% if data.activity_page > 1 %}
+            <a href="{{ url_for('scopes.detail', client_id=client_id, sow_id=scope.id, activity_page=data.activity_page - 1, _anchor='scope-activity') }}">Newer activity</a>
+            {% endif %}
+            {% if data.has_older_activity %}
+            <a href="{{ url_for('scopes.detail', client_id=client_id, sow_id=scope.id, activity_page=data.activity_page + 1, _anchor='scope-activity') }}">Older activity</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+{{ super() }}
+{% if data.can_assess %}<script src="{{ url_for('static', filename='js/scope-estimate.js') }}" defer></script>{% endif %}
+{% endblock %}

@@ -1,0 +1,110 @@
+{% set transition_url = url_for('scopes.transition', client_id=client_id, sow_id=scope.id) %}
+{% set submitted = review_values|default({}) %}
+{% if data.estimate %}
+{% set estimate = data.estimate %}
+<section class="form-panel scope-review-panel" aria-labelledby="estimate-heading">
+    <h2 id="estimate-heading" class="scope-section-title">Estimate {{ estimate.revision }}</h2>
+    {% if estimate.pricing_type %}
+    <div class="scope-price-summary">
+        <span>{{ 'Fixed project price' if estimate.pricing_type == 'project' else 'Estimated cost' }} (USD)</span>
+        <strong>{{ estimate.min_amount|usd }}{% if estimate.min_amount != estimate.max_amount %} &ndash; {{ estimate.max_amount|usd }}{% endif %}</strong>
+    </div>
+    {% endif %}
+    <dl class="scope-metadata">
+        <div><dt>Status</dt><dd>{{ estimate.status|capitalize }}</dd></div>
+        {% if estimate.estimated_completion %}
+        <div><dt>Estimated completion</dt><dd><time datetime="{{ estimate.estimated_completion }}">{{ estimate.estimated_completion }}</time></dd></div>
+        {% endif %}
+        {% if estimate.min_hours is not none %}
+        <div><dt>Estimated hours</dt><dd>{{ estimate.min_hours }}–{{ estimate.max_hours }}</dd></div>
+        {% endif %}
+        {% if estimate.hourly_rate is not none %}
+        <div><dt>Hourly rate</dt><dd>{{ estimate.hourly_rate|usd }}</dd></div>
+        {% endif %}
+    </dl>
+    <h3 class="scope-section-label">Estimated scope</h3><p class="scope-description">{{ estimate.scope_snapshot }}</p>
+    {% if estimate.assumptions %}<h3 class="scope-section-label">Assumptions</h3><p class="scope-description">{{ estimate.assumptions }}</p>{% endif %}
+    {% if estimate.exclusions %}<h3 class="scope-section-label">Exclusions</h3><p class="scope-description">{{ estimate.exclusions }}</p>{% endif %}
+    {% if data.can_decide %}
+    <div class="scope-actions">
+        <button class="admin-button" type="button" data-scope-dialog="accept-estimate-dialog" aria-haspopup="dialog">Approve estimate</button>
+        <button class="admin-button secondary-button" type="button" data-scope-dialog="reject-estimate-dialog" aria-haspopup="dialog">Reject estimate</button>
+    </div>
+    {% for key, label in [('accept', 'Approve'), ('reject', 'Reject')] %}
+    {% set action = key ~ '_estimate' %}
+    <dialog id="{{ key }}-estimate-dialog" class="scope-decision-dialog" aria-labelledby="{{ key }}-estimate-heading">
+        <form method="post" action="{{ transition_url }}" class="scope-review-form">
+            <h2 id="{{ key }}-estimate-heading">{{ label }} the scope of work</h2>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="estimate_id" value="{{ estimate.id }}">
+            <div class="form-field">
+                <label for="{{ key }}-estimate-message">Message (optional)</label>
+                <textarea id="{{ key }}-estimate-message" name="body" rows="3" maxlength="10000" autofocus>{{ submitted.get('body', '') if submitted.get('action') == action }}</textarea>
+            </div>
+            <div class="scope-decision-actions">
+                <button class="admin-button secondary-button" type="submit" formmethod="dialog" formnovalidate>Cancel</button>
+                <button class="admin-button" type="submit" name="action" value="{{ action }}">{{ label }}</button>
+            </div>
+        </form>
+    </dialog>
+    {% endfor %}
+    {% endif %}
+</section>
+{% endif %}
+
+{% if data.can_assess %}
+<section class="form-panel scope-review-panel" aria-labelledby="assessment-heading">
+    <form method="post" action="{{ transition_url }}" class="scope-review-form" data-estimate-form>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="scope-review-heading">
+            <h2 id="assessment-heading" class="scope-section-title">CodeBI review</h2>
+            <fieldset class="scope-pricing-toggle" aria-label="Pricing type">
+                {% set pricing_type = submitted.get('pricing_type', 'hourly') %}
+                <label><input type="radio" name="pricing_type" value="hourly" required {{ 'checked' if pricing_type == 'hourly' }}><span>Hourly</span></label>
+                <label><input type="radio" name="pricing_type" value="project" {{ 'checked' if pricing_type == 'project' }}><span>Fixed Cost</span></label>
+            </fieldset>
+        </div>
+        <div class="scope-pricing-row">
+        <div class="form-field"><label for="estimate-completion">Estimated completion</label><input id="estimate-completion" name="estimated_completion" type="date" value="{{ submitted.get('estimated_completion', '') }}" required></div>
+        <fieldset class="scope-pricing-fields" data-pricing="hourly" aria-label="Hourly pricing">
+            <div class="scope-review-hours scope-hourly-fields">
+                <div class="form-field"><label for="min-hours">Minimum hours</label><input id="min-hours" name="min_hours" type="number" min="0.01" max="99999999.99" step="0.01" value="{{ submitted.get('min_hours', '') }}"></div>
+                <div class="form-field"><label for="max-hours">Maximum hours</label><input id="max-hours" name="max_hours" type="number" min="0.01" max="99999999.99" step="0.01" value="{{ submitted.get('max_hours', '') }}"></div>
+                <div class="form-field"><label for="hourly-rate">Hourly rate (USD)</label><div class="scope-currency-input"><span aria-hidden="true">$</span><input id="hourly-rate" name="hourly_rate" type="number" min="1" max="99999999" step="1" value="{{ submitted.get('hourly_rate', '') }}"></div></div>
+                <div class="form-field scope-inline-cost"><label for="estimated-total">Estimated cost (USD)</label><output for="min-hours max-hours hourly-rate" id="estimated-total" aria-live="polite">&mdash;</output></div>
+            </div>
+        </fieldset>
+        <fieldset class="scope-pricing-fields" data-pricing="project" aria-label="Fixed project pricing">
+            <div class="scope-review-hours scope-project-fields">
+                <div class="form-field"><label for="project-amount">Fixed amount (USD)</label><div class="scope-currency-input"><span aria-hidden="true">$</span><input id="project-amount" name="project_amount" type="text" inputmode="numeric" maxlength="10" value="{{ submitted.get('project_amount', '') }}"></div></div>
+            </div>
+        </fieldset>
+        </div>
+        <div class="form-field"><label for="estimate-scope">Estimated scope</label>
+            <textarea id="estimate-scope" name="scope_snapshot" rows="1" maxlength="20000" required>{{ submitted.get('scope_snapshot', scope.description) }}</textarea></div>
+        <div class="form-field"><label for="estimate-assumptions">Assumptions</label><textarea id="estimate-assumptions" name="assumptions" rows="1" maxlength="10000">{{ submitted.get('assumptions', '') }}</textarea></div>
+        <div class="form-field"><label for="estimate-exclusions">Exclusions</label><textarea id="estimate-exclusions" name="exclusions" rows="1" maxlength="10000">{{ submitted.get('exclusions', '') }}</textarea></div>
+        <button class="admin-button" name="action" value="issue_estimate">Send estimate</button>
+    </form>
+    <details class="scope-decline" {{ 'open' if submitted.get('action') == 'decline' }}>
+        <summary>Decline request</summary>
+        <form method="post" action="{{ transition_url }}" class="scope-review-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-field"><label for="decline-reason">Reason</label><textarea id="decline-reason" name="body" rows="3" maxlength="10000" required>{{ submitted.get('body', '') if submitted.get('action') == 'decline' }}</textarea></div>
+            <button class="admin-button secondary-button" name="action" value="decline">Decline request</button>
+        </form>
+    </details>
+</section>
+{% endif %}
+
+{% if data.can_complete %}
+<section class="form-panel scope-review-panel" aria-labelledby="time-heading">
+    <h2 id="time-heading" class="scope-section-title">Record time</h2>
+    <form method="post" action="{{ transition_url }}" class="scope-review-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-field"><label for="work-minutes">Minutes worked</label><input id="work-minutes" name="minutes" type="number" min="1" max="1440" value="{{ submitted.get('minutes', '') }}" aria-describedby="work-time-help" required><small id="work-time-help">The entry ends at the time you record it.</small></div>
+        <div class="form-field"><label for="work-description">Work description</label><textarea id="work-description" name="body" maxlength="10000" rows="3" required>{{ submitted.get('body', '') if submitted.get('action') == 'log_time' }}</textarea></div>
+        <button class="admin-button" name="action" value="log_time">Record time</button>
+    </form>
+</section>
+{% endif %}

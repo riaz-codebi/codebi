@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from 'portal/_icons.html' import icon %}
+{% block body_class %}portal-app{% endblock %}
+{% block site_header %}
+{% set branding = namespace(client=none) %}
+{% if not portal_user.is_super_admin %}
+    {% for client in portal_user.clients %}
+        {% if client.has_logo and (portal_user.clients|length == 1 or client.id|string == (request.view_args or {}).get('client_id')|string) %}
+            {% set branding.client = client %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+<header class="portal-header{{ ' portal-header-client' if branding.client }}"><div class="portal-header-brand">
+<button class="icon-button" id="portalMenuToggle" aria-label="Toggle navigation" aria-controls="portalSidebar" aria-expanded="true">{{ icon('menu') }}</button>
+<a href="{{ url_for('portal.home') }}" class="portal-logo" aria-label="CodeBI Service Portal">{% if logo_url %}<img class="brand-image" src="{{ logo_url }}" alt="CodeBI Solutions">{% else %}<span class="portal-wordmark">Code<span>BI</span><small>SOLUTIONS</small></span>{% endif %}</a></div>
+{% if branding.client %}
+<div class="client-brand-frame portal-client-brand" data-background="{{ branding.client.logo_background }}">
+    <img class="client-brand-logo" src="{{ url_for('administration.client_brand_logo', client_id=branding.client.id) }}" alt="{{ branding.client.name }} logo">
+</div>
+{% endif %}
+<details class="portal-account" id="portalAccount">
+    <summary aria-label="Account menu for {{ portal_user.display_name }}">
+        <span class="user-avatar" aria-hidden="true">{{ portal_user.display_name[:1] }}</span>
+        <span class="header-user">{{ portal_user.display_name }}<small>{{ 'Internal administrator' if portal_user.is_super_admin else 'Client account' }}</small></span>
+        {{ icon('chevron') }}
+    </summary>
+    <form class="portal-account-dropdown" method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">{{ icon('logout') }} Sign out</button>
+    </form>
+</details></header>
+{% endblock %}
+{% block content %}
+<div class="portal-layout" id="portalLayout"><aside class="portal-sidebar" id="portalSidebar" aria-label="Service Portal navigation"><span class="sidebar-caption">SERVICE PORTAL</span>
+<a class="portal-nav-item {{ 'active' if request.endpoint == 'portal.home' }}" href="{{ url_for('portal.home') }}">{{ icon('dashboard') }}<span>Dashboard</span></a>
+{% if portal_user.is_super_admin %}<a class="portal-nav-item {{ 'active' if request.blueprint == 'scopes' }}" href="{{ url_for('scopes.index') }}">{{ icon('document') }}<span>Scopes of work</span></a>{% else %}{% for client in portal_user.clients %}<a class="portal-nav-item {{ 'active' if request.blueprint == 'scopes' and client_id is defined and client_id|string == client.id|string }}" href="{{ url_for('scopes.index', client_id=client.id) }}">{{ icon('document') }}<span>Scopes of work{% if portal_user.clients|length > 1 %}<small>{{ client.name }}</small>{% endif %}</span></a>{% endfor %}{% endif %}
+{% if portal_user.is_super_admin %}<details class="nav-group" {% if request.endpoint != 'portal.home' %}open{% endif %}><summary>{{ icon('settings') }}<span>Primary Administration</span>{{ icon('chevron') }}</summary>
+<a class="portal-subnav {{ 'active' if request.endpoint in ('administration.clients', 'administration.client_form') }}" href="{{ url_for('administration.clients') }}">Clients</a><a class="portal-subnav {{ 'active' if request.endpoint in ('administration.users', 'administration.user_form') }}" href="{{ url_for('administration.users') }}">Users</a><a class="portal-subnav {{ 'active' if request.endpoint == 'administration.inquiries' }}" href="{{ url_for('administration.inquiries') }}">Inquiries</a></details>
+{% else %}{% for client in portal_user.clients if client.role == 'client_admin' %}<details class="nav-group" open><summary>{{ icon('shield') }}<span>Client Administration{% if portal_user.clients|length > 1 %}<small>{{ client.name }}</small>{% endif %}</span>{{ icon('chevron') }}</summary><a class="portal-subnav portal-subnav-with-icon {{ 'active' if request.endpoint in ('administration.users', 'administration.user_form') and client_id is defined and client_id|string == client.id|string }}" href="{{ url_for('administration.users', client_id=client.id) }}">{{ icon('clients') }}<span>Users</span></a></details>{% endfor %}{% endif %}
+{% if not portal_user.is_super_admin %}
+<form class="sidebar-signout" method="post" action="{{ url_for('auth.logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="portal-nav-item portal-logout" type="submit">{{ icon('logout') }}<span>Sign out</span></button>
+</form>
+{% endif %}
+<div class="sidebar-footer">CodeBI Solutions<small>Consulting &amp; technology</small></div></aside>
+<section class="portal-content">{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="portal-notice {{ category }}" role="status">{{ message }}</div>{% endfor %}{% endwith %}{% block portal_content %}{% endblock %}</section></div>
+{% endblock %}
+{% block site_footer %}{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/portal.js') }}"></script>{% endblock %}

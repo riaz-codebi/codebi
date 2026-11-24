@@ -1,0 +1,37 @@
+{% extends 'portal/base.html' %}
+{% from 'portal/_forms.html' import field, checkbox, searchable with context %}
+{% block portal_content %}
+<a class="back-link" href="{{ url_for('administration.clients') }}">{{ icon('arrow') }}Back to clients</a><div class="page-heading"><div><span class="breadcrumb">Primary Administration / Clients</span><h1>{{ 'Edit client' if editing else 'Create client' }}</h1></div></div>
+<form method="post" enctype="multipart/form-data" class="admin-form client-profile-form" data-regions-url="{{ url_for('administration.reference_regions') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if errors %}<div class="form-alert" role="alert">{{ errors.get('_form', 'Please correct the highlighted fields.') }}</div>{% endif %}
+{% include 'portal/_client_fields.html' %}
+<fieldset class="form-panel">
+    <legend>Client branding</legend>
+    <div class="form-field">
+        <label for="logo-background">Logo background</label>
+        <select id="logo-background" name="logo_background">
+            <option value="light" {{ 'selected' if values.logo_background == 'light' }}>Light</option>
+            <option value="dark" {{ 'selected' if values.logo_background == 'dark' }}>Dark</option>
+        </select>
+        {% if errors.get('logo_background') %}<span class="field-error">{{ errors.logo_background }}</span>{% endif %}
+    </div>
+    <div id="client-logo-preview" class="client-brand-frame" data-background="{{ values.logo_background }}">
+        <img class="client-brand-logo" {% if logo_client_id %}src="{{ url_for('administration.client_brand_logo', client_id=logo_client_id) }}"{% else %}hidden{% endif %} alt="Client logo preview">
+        <span {% if logo_client_id %}hidden{% endif %}>Logo preview</span>
+    </div>
+    <div class="form-field">
+        <label for="client-logo">{{ 'Replace logo' if logo_client_id else 'Client logo' }}</label>
+        <input id="client-logo" name="logo" type="file" accept="image/png,.png" aria-describedby="client-logo-help{% if errors.get('logo') %} client-logo-error{% endif %}" {% if errors.get('logo') %}aria-invalid="true"{% endif %}>
+        <small id="client-logo-help">PNG, up to 2 MB and 2,048 pixels per side.</small>
+        {% if errors.get('logo') %}<span id="client-logo-error" class="field-error">{{ errors.logo }}</span>{% endif %}
+    </div>
+</fieldset>
+{% if registration_inquiry %}
+<section class="form-panel"><h2 class="scope-section-title">Registration inquiry</h2><p class="scope-description">{{ registration_inquiry }}</p></section>
+{% endif %}
+<div class="form-actions">
+    <a class="admin-button secondary-button" href="{{ url_for('administration.clients') }}">Cancel</a>
+    <button type="submit" class="admin-button">{{ 'Save changes' if editing else 'Create client' }}</button>
+</div>
+</form>
+{% endblock %}
+{% block extra_scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/searchable-select.js') }}"></script><script src="{{ url_for('static', filename='js/address-autocomplete.js') }}"></script><script src="{{ url_for('static', filename='js/client-logo-preview.js') }}"></script>{% endblock %}

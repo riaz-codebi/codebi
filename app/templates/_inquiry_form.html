@@ -1,0 +1,28 @@
+<div id="inquiry">
+    {% for message in get_flashed_messages(category_filter=['inquiry_received']) %}
+    <p class="inquiry-success" role="status">{{ message }}</p>
+    {% endfor %}
+    {% if inquiry_errors.get('_form') %}<p class="auth-alert" role="alert">{{ inquiry_errors['_form'] }}</p>{% endif %}
+    <form class="public-inquiry-form" method="post" action="{{ url_for(request.endpoint, _anchor='inquiry') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% for field, label, type, limit, autocomplete in [
+            ('name', 'Name', 'text', 200, 'name'), ('email', 'Email', 'email', 254, 'email'),
+            ('company', 'Company name', 'text', 200, 'organization')
+        ] %}
+        <div class="form-field">
+            <label for="inquiry-{{ field }}">{{ label }}</label>
+            <input id="inquiry-{{ field }}" name="{{ field }}" type="{{ type }}" maxlength="{{ limit }}"
+                   autocomplete="{{ autocomplete }}" value="{{ inquiry_values[field] }}" required
+                   {% if inquiry_errors.get(field) %}aria-invalid="true" aria-describedby="inquiry-{{ field }}-error"{% endif %}>
+            {% if inquiry_errors.get(field) %}<span class="field-error" id="inquiry-{{ field }}-error">{{ inquiry_errors[field] }}</span>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="form-field">
+            <label for="inquiry-details">What are you looking for?</label>
+            <textarea id="inquiry-details" name="details" rows="4" maxlength="5000" required
+                      {% if inquiry_errors.get('details') %}aria-invalid="true" aria-describedby="inquiry-details-error"{% endif %}>{{ inquiry_values.details }}</textarea>
+            {% if inquiry_errors.get('details') %}<span class="field-error" id="inquiry-details-error">{{ inquiry_errors.details }}</span>{% endif %}
+        </div>
+        <button class="provider-button inquiry-submit" type="submit">Send inquiry</button>
+    </form>
+</div>

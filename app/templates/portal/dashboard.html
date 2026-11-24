@@ -1,0 +1,31 @@
+{% extends 'portal/base.html' %}
+{% block portal_content %}
+<div class="page-heading"><div><span class="breadcrumb">Service Portal / Dashboard</span>
+{% if portal_user.is_super_admin %}<h1>CodeBI Service Portal</h1><p>Welcome back, {{ portal_user.display_name }}.</p>{% elif portal_user.clients|length == 1 %}<h1><span class="portal-title-prefix">Service Portal for</span> {{ portal_user.clients[0].name }}</h1>{% else %}<h1>Your Service Portals</h1>{% endif %}</div><span class="status-badge active-status">Account active</span></div>
+{% if portal_user.is_super_admin %}<div class="dashboard-banner"><div><span class="eyebrow">Primary administration</span><h2>Your clients. One connected portal.</h2><p>Manage client profiles, provision users, and keep access organized.</p><a class="admin-button" href="{{ url_for('administration.client_form') }}">{{ icon('plus') }}Create client</a></div>{{ icon('building') }}</div>
+<div class="dashboard-cards"><a class="dashboard-card" href="{{ url_for('scopes.index') }}"><span class="feature-icon">{{ icon('document') }}</span><h2>Scopes of work</h2><p>Review client submissions and track their status.</p><span class="text-link">View scopes of work &rarr;</span></a><a class="dashboard-card" href="{{ url_for('administration.clients') }}"><span class="feature-icon">{{ icon('building') }}</span><h2>Clients</h2><p>Company details, contacts, and client users.</p><span class="text-link">Manage clients &rarr;</span></a><a class="dashboard-card" href="{{ url_for('administration.users') }}"><span class="feature-icon">{{ icon('clients') }}</span><h2>Users &amp; access</h2><p>Internal administrators and client memberships.</p><span class="text-link">Manage users &rarr;</span></a></div>
+{% else %}
+<div class="dashboard-cards">
+    {% for client in portal_user.clients %}
+    <article class="dashboard-card">
+        {% if client.has_logo and portal_user.clients|length > 1 %}
+        <div class="client-brand-frame" data-background="{{ client.logo_background }}">
+            <img class="client-brand-logo" src="{{ url_for('administration.client_brand_logo', client_id=client.id) }}" alt="{{ client.name }} logo">
+        </div>
+        {% elif not client.has_logo %}
+        <span class="feature-icon">{{ icon('building') }}</span>
+        {% endif %}
+        <h2>{{ client.name }}</h2>
+        <p>{{ 'Client Administrator' if client.role == 'client_admin' else 'Client User' }}</p>
+        <div class="scope-dashboard-actions">
+            <a class="text-link" href="{{ url_for('scopes.form', client_id=client.id) }}">Create scope of work &rarr;</a>
+            <a class="text-link" href="{{ url_for('scopes.index', client_id=client.id) }}">View scopes of work &rarr;</a>
+            {% if client.role == 'client_admin' %}
+            <a class="text-link" href="{{ url_for('administration.users', client_id=client.id) }}">Manage users &rarr;</a>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,47 @@
+<div class="client-top-row">
+    <fieldset class="form-panel">
+        <legend>Company details</legend>
+        <div class="form-grid company-grid">
+            {{ field('name', 'Client name', required=true) }}
+            {{ field('legal_name', 'Legal company name') }}
+            {{ searchable('industry_id', 'Industry', placeholder='Select industry') }}
+            {{ field('website', 'Website', type='url') }}
+            {{ field('email', 'Company email', type='email', maxlength=254) }}
+            {{ field('phone', 'Company phone', type='tel') }}
+        </div>
+    </fieldset>
+    <fieldset class="form-panel">
+        <legend>Primary contact</legend>
+        <div class="form-grid contact-grid">
+            {{ field('contact_name', 'Contact name') }}
+            {{ field('contact_email', 'Contact email', type='email', maxlength=254) }}
+            {{ field('contact_phone', 'Contact phone', type='tel') }}
+        </div>
+    </fieldset>
+</div>
+<fieldset class="form-panel" data-address-url="{{ url_for('auth.registration_address_suggestions') if onboarding else url_for('administration.address_suggestions') }}">
+    <legend class="address-heading">Address <button type="button" class="address-icon-button" data-open-address aria-label="Search address" title="Search address" aria-haspopup="dialog" aria-controls="address-search-dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></button></legend>
+    <div class="form-grid address-lines-grid">
+        {{ field('address_line_1', 'Address line 1') }}
+        {{ field('address_line_2', 'Address line 2') }}
+    </div>
+    <div class="location-grid">
+        {{ searchable('country_code', 'Country', placeholder='Select country') }}
+        {{ searchable('state_region_code', 'State / region', disabled=not choices.state_region_code, placeholder='Select state / region' if values.country_code else 'Select country first') }}
+        {{ field('city', 'City') }}
+        {{ field('postal_code', 'Postal code') }}
+        {{ searchable('timezone', 'Timezone', required=true, placeholder='Select timezone') }}
+    </div>
+    <div class="lookup-load-error" hidden><span role="alert">States could not be loaded.</span> <button type="button" class="text-button" data-retry-regions>Retry</button></div>
+    <div class="address-provider address-card-credit" hidden><span translate="no">Google Maps</span><span data-address-attributions></span></div>
+    {% if not onboarding %}<div class="form-divider"></div>
+    {{ checkbox('is_active', 'Client is active') }}{% endif %}
+    <dialog id="address-search-dialog" class="address-search-dialog" aria-labelledby="address-search-title">
+        <div class="address-dialog-heading"><h2 id="address-search-title">Search address</h2><button type="button" class="address-dialog-close" data-close-address aria-label="Close address search">&times;</button></div>
+        <label class="visually-hidden" for="address-search-query">Address search</label>
+        <div class="address-query-row"><input id="address-search-query" type="text" maxlength="250" placeholder="Type a few words of the address" autocomplete="off"><button type="button" class="address-icon-button" data-find-address aria-label="Find address" title="Find address"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></button></div>
+        <p class="address-status" role="status" aria-live="polite"></p>
+        <div data-address-results></div>
+        <div class="address-provider address-dialog-credit" translate="no">Google Maps</div>
+    </dialog>
+</fieldset>

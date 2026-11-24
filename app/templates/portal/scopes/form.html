@@ -1,0 +1,68 @@
+{% extends 'portal/base.html' %}
+{% from 'portal/_forms.html' import field with context %}
+{% block portal_content %}
+<a class="back-link" href="{{ url_for('scopes.index', client_id=client_id) }}">{{ icon('arrow') }}Back to scopes of work</a>
+<div class="page-heading"><div><span class="breadcrumb">{{ data.client.name }} / Scopes of work</span><h1>{{ 'Edit scope of work' if editing else 'Create scope of work' }}</h1></div></div>
+<form method="post" class="admin-form scope-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% if errors %}<div class="form-alert" role="alert">{{ errors.get('_form', 'Please correct the highlighted fields.') }}</div>{% endif %}
+<div class="form-panel scope-create-card">
+    <div class="scope-overview-heading">
+        <h2 class="scope-section-title">Scope details</h2>
+        <div class="form-actions"><a class="admin-button secondary-button" href="{{ url_for('scopes.index', client_id=client_id) }}">Cancel</a><button class="admin-button secondary-button" type="submit" name="action" value="draft">Save draft</button>{% if data.can_submit %}<button class="admin-button" type="submit" name="action" value="submit">Submit to CodeBI</button>{% endif %}</div>
+    </div>
+    <div class="scope-form-fields">
+        <div class="scope-create-top">
+            {{ field('title', 'Title', required=true) }}
+            {{ field('desired_completion_date', 'Desired completion', type='date') }}
+        </div>
+        <div class="scope-options-grid">
+            <fieldset class="scope-choice-group scope-tool-group">
+                <legend>Solution interests</legend>
+                {% for tool in data.tools %}
+                <label class="scope-choice"><input type="checkbox" name="tool_ids" value="{{ tool.id }}" {{ 'data-other-tool' if tool.is_other }} {{ 'checked' if tool.id in values.tool_ids }}> {{ tool.name }}{{ ' (inactive)' if not tool.active }}</label>
+                {% if tool.is_other %}
+                <div class="form-field scope-other-tool {{ 'has-error' if errors.get('other_tool_details') }}">
+                    <label for="other-tool-details">Other solution</label>
+                    <textarea id="other-tool-details" name="other_tool_details" rows="2" maxlength="1000" placeholder="Describe what you’re looking for" {% if errors.get('other_tool_details') %}aria-invalid="true" aria-describedby="other-tool-error"{% endif %}>{{ values.other_tool_details }}</textarea>
+                    {% if errors.get('other_tool_details') %}<span id="other-tool-error" class="field-error">{{ errors.other_tool_details }}</span>{% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% if errors.get('tool_ids') %}<span class="field-error">{{ errors.tool_ids }}</span>{% endif %}
+            </fieldset>
+            <fieldset class="scope-choice-group">
+                <legend>Scope type <span class="required">*</span></legend>
+                {% set type_help = {
+                    'Discovery': 'Explore what’s possible and get help defining the scope.',
+                    'Enhancement': 'Add a feature or improve something you already use.',
+                    'Maintenance': 'Keep an existing solution up to date and running smoothly.',
+                    'New Development': 'Build a new app, report, automation, or other solution.',
+                    'Troubleshooting': 'Find and fix an issue with an existing solution.'
+                } %}
+                {% for type in data.types %}
+                <label class="scope-choice scope-choice-with-help">
+                    <input type="radio" name="sow_type_id" value="{{ type.id }}" required {{ 'checked' if type.id == values.sow_type_id }} {% if errors.get('sow_type_id') %}aria-invalid="true" aria-describedby="sow-type-error"{% endif %}>
+                    <span>{{ type.name }}{{ ' (inactive)' if not type.active }}
+                        {% if type_help.get(type.name) %}<small>{{ type_help[type.name] }}</small>{% endif %}
+                    </span>
+                </label>
+                {% else %}<p>No active scope types are available.</p>{% endfor %}
+                {% if errors.get('sow_type_id') %}<span id="sow-type-error" class="field-error">{{ errors.sow_type_id }}</span>{% endif %}
+            </fieldset>
+            <fieldset class="scope-choice-group">
+                <legend>Priority</legend>
+                {% for priority in priorities %}
+                <label class="scope-choice"><input type="radio" name="priority" value="{{ priority }}" {{ 'checked required' if priority == 'normal' else 'disabled' }}> {{ priority|capitalize }}</label>
+                {% endfor %}
+                {% if errors.get('priority') %}<span class="field-error">{{ errors.priority }}</span>{% endif %}
+            </fieldset>
+        </div>
+        <div class="form-field {{ 'has-error' if errors.get('description') }}">
+            <label for="description">Description <span class="required">*</span></label>
+            <textarea id="description" name="description" rows="4" maxlength="20000" required {% if errors.get('description') %}aria-invalid="true" aria-describedby="description-error"{% endif %}>{{ values.description }}</textarea>
+            {% if errors.get('description') %}<span id="description-error" class="field-error">{{ errors.description }}</span>{% endif %}
+        </div>
+    </div>
+</div>
+</form>
+{% endblock %}

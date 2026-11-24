@@ -1,0 +1,28 @@
+{% extends 'portal/base.html' %}
+{% block portal_content %}
+<div class="page-heading"><div><span class="breadcrumb">Primary Administration</span><h1>Inquiries</h1></div></div>
+<form method="get" class="list-toolbar">
+    <div class="form-field"><label for="inquiry-search">Search inquiries</label><input id="inquiry-search" name="q" value="{{ query }}" maxlength="200" placeholder="Name, email, or company"></div>
+    <button class="admin-button secondary-button" type="submit">Search</button>
+</form>
+<div class="table-panel">
+    <div class="table-scroll"><table class="admin-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Submitted</th><th>Inquiry</th></tr></thead>
+        <tbody>
+        {% for inquiry in rows %}
+        <tr>
+            <td>{{ inquiry.name }}</td><td>{{ inquiry.email }}</td><td>{{ inquiry.company }}</td>
+            <td><time datetime="{{ inquiry.created_at.isoformat() }}">{{ inquiry.created_at.isoformat()|central_time }}</time></td>
+            <td><details><summary>View details</summary><p class="scope-description">{{ inquiry.details }}</p></details></td>
+        </tr>
+        {% else %}<tr><td colspan="5">No inquiries found.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+    <div class="table-pagination"><span>{{ total }} result{{ '' if total == 1 else 's' }} &middot; Page {{ page }}</span>
+        <div>
+            {% if page > 1 %}<a href="{{ url_for('administration.inquiries', q=query, page=page - 1) }}">&larr; Previous</a>{% endif %}
+            {% if page * 25 < total %}<a href="{{ url_for('administration.inquiries', q=query, page=page + 1) }}">Next &rarr;</a>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

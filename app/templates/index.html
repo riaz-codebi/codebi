@@ -1,65 +1,44 @@
 {% extends "base.html" %}
 
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home-ecosystem.css') }}">{% endblock %}
+
 {% block content %}
 
-<section class="hero">
-    <div class="hero-content">
-        <div class="brand-hero">
-            <h1>CodeBI Solutions</h1>
-        </div>
+<section class="hero home-hero">
+    <div class="home-hero-intro">
+        <span class="eyebrow">AI Engineering / Intelligent Automation / SaaS Platforms</span>
 
-        <span class="eyebrow">Consulting • Analytics • AI • SaaS</span>
-
-        <h2>We build practical business technology using code and intelligence.</h2>
+        <h1>We Engineer Intelligence Into Business.</h1>
 
         <p>
-            CodeBI Solutions helps businesses automate operations, modernize reporting,
-            build Python web applications, and turn messy business processes into scalable
-            digital platforms.
+            From AI-powered applications and intelligent workflows to enterprise analytics and custom SaaS
+            platforms, we design and build technology that transforms how businesses operate, automate, and scale.
         </p>
 
         <div class="hero-actions">
-            <a class="btn primary" href="{{ url_for('main.services') }}">Explore Services</a>
-            <a class="btn secondary" href="{{ url_for('main.products') }}">View Products</a>
+            <a class="btn secondary" href="{{ url_for('main.services') }}">Explore Our Solutions <span aria-hidden="true">↗</span></a>
+            <a class="btn secondary" href="{{ url_for('main.contact') }}">Discuss a Project <span aria-hidden="true">↗</span></a>
         </div>
     </div>
-
-    <div class="hero-card hero-image-card">
-        {% if hero_flyer_url %}
-            <div class="hero-image-wrapper">
-                <img id="heroFlyer" src="{{ hero_flyer_url }}" alt="CodeBI flyer" class="hero-flyer">
-                <div class="hero-overlay">
-                    <span>Click to enlarge</span>
-                </div>
-            </div>
-        {% else %}
-            <div class="hero-fallback">
-                <h3>Marketing flyer preview</h3>
-                <p>No flyer image was found in Supabase storage or local static files.</p>
-            </div>
-        {% endif %}
-    </div>
+    {% include '_home_ecosystem.html' %}
 </section>
-
-{% if hero_flyer_url %}
-<div class="modal-overlay" id="flyerModal" aria-hidden="true">
-    <div class="modal-content">
-        <button type="button" class="modal-close" id="flyerModalClose">×</button>
-        <img src="{{ hero_flyer_url }}" alt="Flyer full view" class="modal-flyer">
-    </div>
-</div>
-{% endif %}
 
 <section class="section">
     <div class="hero-card content-card">
-        <h3>What CodeBI means</h3>
+        <h3>The Meaning Behind CodeBI</h3>
         <p>
-            <strong>Code</strong> represents custom Python, Flask, FastAPI, automation,
-            and application development.
+            <strong>Code</strong> represents our software engineering expertise—designing and developing
+            custom applications, scalable SaaS platforms, intelligent automation, and integrated solutions
+            using Python, Flask, FastAPI, and modern technologies.
         </p>
         <p>
-            <strong>BI</strong> represents business intelligence, Power BI, analytics,
-            reporting, decision systems, and executive dashboards.
+            <strong>BI (Business Intelligence)</strong> represents our expertise in transforming data into
+            actionable intelligence through advanced analytics, Power BI, enterprise reporting, predictive
+            insights, and decision-support systems.
+        </p>
+        <p>
+            <strong>Together, Code and BI reflect our core philosophy:</strong> combining software engineering
+            with data intelligence to build smarter systems, streamline operations, and empower better business decisions.
         </p>
     </div>
 </section>

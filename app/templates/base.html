@@ -11,9 +11,9 @@
     {% block extra_styles %}{% endblock %}
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
-<header class="site-header">
+{% block site_header %}<header class="site-header">
     <nav class="navbar">
         <a href="{{ url_for('main.index') }}" class="brand">
             {% if logo_url %}
@@ -23,6 +23,7 @@
             {% endif %}
         </a>
 
+        {% block public_navigation %}
         <button class="nav-toggle" id="navToggle">☰</button>
 
         <div class="nav-links" id="navLinks">
@@ -30,15 +31,17 @@
             <a href="{{ url_for('main.services') }}">Services</a>
             <a href="{{ url_for('main.products') }}">Products</a>
             <a href="{{ url_for('main.contact') }}">Contact</a>
+            <a href="{{ url_for('auth.login') }}">Service portal</a>
         </div>
+        {% endblock %}
     </nav>
-</header>
+</header>{% endblock %}
 
 <main>
     {% block content %}{% endblock %}
 </main>
 
-<footer class="site-footer">
+{% block site_footer %}<footer class="site-footer">
     <div>
         <strong>CodeBI Solutions</strong>
         <p>Python applications, business intelligence, analytics, AI automation, and workflow platforms.</p>
@@ -48,8 +51,9 @@
         <p>© 2026 CodeBI Solutions. All rights reserved.</p>
         <nav aria-label="Legal"><a href="{{ url_for('main.privacy') }}">Privacy policy</a> &middot; <a href="{{ url_for('main.terms') }}">Terms of service</a></nav>
     </div>
-</footer>
+</footer>{% endblock %}
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

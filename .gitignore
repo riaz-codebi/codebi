@@ -29,5 +29,7 @@ coverage.xml
 .idea/
 .vscode/
 .env
+CHAT_HISTORY.md
+instance/
 Thumbs.db
 .DS_Store

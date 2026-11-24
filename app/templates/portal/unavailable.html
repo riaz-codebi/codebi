@@ -1,0 +1,2 @@
+{% extends 'portal/base.html' %}
+{% block portal_content %}<div class="empty-state form-panel"><span class="feature-icon">{{ icon('settings') }}</span><h1>Administration is temporarily unavailable</h1><p>Your changes have not been confirmed. Please try again or contact your portal administrator.</p><a class="admin-button secondary-button" href="{{ url_for('portal.home') }}">Back to dashboard</a></div>{% endblock %}

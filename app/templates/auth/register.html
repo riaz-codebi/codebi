@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'portal/_forms.html' import field, checkbox, searchable with context %}
+{% block body_class %}portal-app registration-app{% endblock %}
+{% block auth_overlay %}{% endblock %}
+{% block content %}
+<section class="registration-shell">
+    <div class="page-heading"><div><span class="breadcrumb">CodeBI / Account setup</span><h1>Create your client account</h1><p>Tell us about your company and what you’re looking for.</p></div>
+    </div>
+    <form method="post" class="admin-form client-profile-form" data-regions-url="{{ url_for('auth.register_regions') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if errors %}<div class="form-alert" role="alert">{{ errors.get('_form', 'Please correct the highlighted fields.') }}</div>{% endif %}
+        <fieldset class="form-panel"><legend>Your account</legend><div class="form-grid">
+            <div class="form-field {{ 'has-error' if errors.get('owner_name') }}"><label for="owner_name">Your name <span class="required">*</span></label><input id="owner_name" name="owner_name" value="{{ owner_name }}" maxlength="200" autocomplete="name" required {% if errors.get('owner_name') %}aria-invalid="true" aria-describedby="owner_name-error"{% endif %}>{% if errors.get('owner_name') %}<span class="field-error" id="owner_name-error">{{ errors.owner_name }}</span>{% endif %}</div>
+            <div class="form-field"><label for="verified-email">Verified sign-in email</label><input id="verified-email" type="email" value="{{ identity.email }}" readonly></div>
+        </div></fieldset>
+        {% include 'portal/_client_fields.html' %}
+        <fieldset class="form-panel"><legend>Your inquiry</legend><div class="form-field {{ 'has-error' if errors.get('inquiry') }}">
+            <label for="inquiry">What are you looking for? <span class="required">*</span></label>
+            <textarea id="inquiry" name="inquiry" rows="4" maxlength="5000" required {% if errors.get('inquiry') %}aria-invalid="true" aria-describedby="inquiry-error"{% endif %}>{{ inquiry }}</textarea>
+            {% if errors.get('inquiry') %}<span class="field-error" id="inquiry-error">{{ errors.inquiry }}</span>{% endif %}
+        </div></fieldset>
+        <div class="form-actions"><a class="admin-button secondary-button" href="{{ url_for('main.index') }}">Cancel</a><button type="submit" class="admin-button">Create account</button></div>
+    </form>
+    <form class="registration-switch" method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="text-button">Use a different sign-in account</button></form>
+</section>
+{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/searchable-select.js') }}"></script><script src="{{ url_for('static', filename='js/address-autocomplete.js') }}"></script>{% endblock %}
