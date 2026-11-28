@@ -77,8 +77,22 @@ Completed observations remain staged while the previous published head stays vis
 Automatic transient retries reuse the same job and skip committed work. A failed or
 blocked resumable job offers Resume in the portal. Access, the original requesting
 user and credential version must still be valid; changed source/configuration may
-require a new job. Attempts are bounded (up to five with explicit manual resume).
+require a new job. New extraction jobs allow ten automatic attempts, with delays
+from ten seconds to five minutes (or a longer vendor Retry-After). Three consecutive
+attempts without additional completed records stop automatic recovery. Manual Resume
+adds up to ten attempts, with a lifetime ceiling of twenty; attempts are never reset.
 Cancelled jobs are not automatically resumed.
+
+Install `database/commerce/005_job_recovery.sql` before deploying this policy, using
+`scripts/setup_job_recovery.py --apply` with the owner connection. The migration only
+widens the retry integrity bound; it does not queue jobs or change catalog data.
+An existing failed five-attempt job can then be resumed once from the updated portal.
+Stop any local worker before resuming a job intended for the Droplet worker.
+
+The worker reserves a second database connection for concurrent lease renewal and
+tolerates one transient renewal failure before stopping safely. Recovery diagnostics
+retain exception class, code location and SQLSTATE where available, never exception
+messages or credentials. The portal shows scheduled retries and their eligible time.
 
 `429` honors a bounded Retry-After interval (up to 24 hours), stored in the shared
 vendor throttle window. Temporary network/server failures back off; authentication

@@ -7,7 +7,7 @@
 <td>{{ job.catalog_label or '\u2014' }}</td>
 <td class="commerce-job-requester" title="{{ job.requested_by_name }}">{{ job.requested_by_name }}</td>
 <td><time data-job-run-date datetime="{{ job.run_date_iso }}" title="{{ job.run_date_kind }} / {{ job.run_timezone }}">{{ job.run_date_display }}</time></td>
-<td data-job-status>{{ job.status|capitalize }}</td>
+<td data-job-status>{{ job.status_label }}</td>
 <td data-job-progress title="{{ job.stage|replace('_',' ') }}">{{ job.progress }}%</td>
 <td>{% if job.kind=='catalog' or (job.kind=='inventory' and not job.inventory_preview) %}<span data-job-count>{{ job.completed_products }} / {{ job.total_products }}</span>{% else %}&mdash;{% endif %}</td>
 <td>{% if job.kind=='catalog' or (job.kind=='inventory' and not job.inventory_preview) %}<span data-job-published>{{ 'Yes' if job.published else 'No' }}</span>{% else %}&mdash;{% endif %}</td>

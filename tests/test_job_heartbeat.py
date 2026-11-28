@@ -38,7 +38,7 @@ class JobHeartbeatTests(unittest.TestCase):
         def renew(_progress):
             observed.set()
             raise error
-        heartbeat = JobHeartbeat(renew, LeaseLost, interval=.01)
+        heartbeat = JobHeartbeat(renew, LeaseLost, interval=.01,max_failures=1)
         heartbeat.start()
         self.assertTrue(observed.wait(2))
         heartbeat.close()  # Join ensures the failure has been recorded.
@@ -53,6 +53,25 @@ class JobHeartbeatTests(unittest.TestCase):
         heartbeat = self.failure_heartbeat(RuntimeError('private-database-connection-detail'))
         with self.assertRaisesRegex(RuntimeError, '^Job lease renewal failed\\.$'):
             heartbeat.check()
+
+    def test_one_transient_renewal_failure_recovers_without_stopping_job(self):
+        recovered=Event();calls=[]
+        def renew(_progress):
+            calls.append(1)
+            if len(calls)==1:raise RuntimeError('private-database-connection-detail')
+            recovered.set()
+        heartbeat=JobHeartbeat(renew,LeaseLost,interval=.01)
+        heartbeat.start()
+        try:
+            self.assertTrue(recovered.wait(2));heartbeat.check()
+            self.assertNotIn('private-database',repr(heartbeat._details))
+        finally:heartbeat.close()
+
+    def test_worker_pool_has_capacity_for_heartbeat_and_product_transactions(self):
+        from commerce_hub.worker import engine_from_url
+        engine=engine_from_url('postgresql://commerce_worker:fixture@db.example/postgres')
+        try:self.assertEqual(engine.pool.size(),2)
+        finally:engine.dispose()
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ import time
 from uuid import uuid4
 
 from dotenv import dotenv_values
-from sqlalchemy import create_engine, event, select, text
+from sqlalchemy import create_engine, event, select, text,func
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 from app.models import Client, Membership, User, UserRole
@@ -22,10 +22,12 @@ from commerce_hub.export_files import csv_file, xlsx_file
 from commerce_hub.export_mapping import MappingError, map_row, match_skus
 from commerce_hub.models import ClientAppAccess, CommercialApp, DestinationTemplate, Export, Inventory, Job, MappingRule, Product, Vendor, VendorConnection, now
 from commerce_hub.artifact_storage import StorageUnavailable, upload
-from commerce_hub.job_heartbeat import JobHeartbeat
+from commerce_hub.job_heartbeat import JobHeartbeat,HeartbeatUnavailable
 from commerce_hub.product_identity import catalog_sku
 from commerce_hub.models import VendorCatalogLease
 from commerce_hub.vendors.shiloh_tack.catalog_client import CatalogError, CatalogRetryable
+from commerce_hub.recovery import NO_PROGRESS_LIMIT,NON_RESUMABLE,retry_delay,diagnostic
+from commerce_hub.models import CatalogWorkItem
 
 FEATURE={'test_connection':'connections','catalog':'catalog','inventory':'inventory','export_vendor':'vendor_export','export_shopify':'shopify_export'}
 log=logging.getLogger('commerce_worker')
@@ -86,8 +88,10 @@ class Worker:
                     close_job(job,'failed','lease_expired')
                 else:
                     job.status,job.lease_token,job.lease_expires_at='queued',None,None
-                    job.available_at=now()+timedelta(seconds=2**job.attempts)
+                    job.available_at=now()+timedelta(seconds=retry_delay(job.attempts))
                     job.error_code='lease_expired'
+                    job.result={**job.result,'recovery':{**job.result.get('recovery',{}),'state':'scheduled',
+                        'last_error':'lease_expired','retry_at':job.available_at.isoformat()}}
             db.flush()
             query=select(Job).where(Job.status=='queued',Job.available_at<=now())
             if job_id is not None:
@@ -116,7 +120,12 @@ class Worker:
                 owner=db.get(Job,lease.job_id) if lease.job_id else None
                 if owner and owner.status=='running' and future(owner.lease_expires_at) and owner.lease_token==lease.lease_token:
                     return None
+            if job.attempts and job.error_code is None and job.result.get('recovery'):
+                recovery={**job.result['recovery'],'stalled_attempts':0,'state':'manual_resume'}
+                recovery.pop('retry_at',None)
+                job.result={**job.result,'recovery':recovery}
             job.status,job.lease_token='running',str(uuid4())
+            job.error_code=None
             job.lease_expires_at=now()+timedelta(seconds=self.lease_seconds)
             job.attempts+=1
             job.started_at,job.updated_at=job.started_at or now(),now()
@@ -156,21 +165,38 @@ class Worker:
             job.progress=max(job.progress,max(0,min(99,int(progress))))
             job.updated_at=now()
 
-    def finish_error(self,claimed,code,status='blocked',retry=False,retry_after=0):
+    def finish_error(self,claimed,code,status='blocked',retry=False,retry_after=0,failure=None):
         try:
             with self.live(claimed,check_access=False) as (db,job):
+                if failure is not None:job.result={**job.result,'diagnostic':diagnostic(failure)}
+                recovery=dict(job.result.get('recovery',{}))
+                retry=retry and code not in NON_RESUMABLE
+                if retry and job.kind in ('catalog','inventory'):
+                    model=CatalogWorkItem if job.kind=='catalog' else Inventory
+                    count_query=select(func.count()).select_from(model).where(model.job_id==job.id)
+                    if job.kind=='catalog':count_query=count_query.where(CatalogWorkItem.product_id.is_not(None))
+                    completed=db.scalar(count_query)
+                    stalled=(recovery.get('stalled_attempts',0)+1) if completed<=recovery.get('completed',0) else 0
+                    recovery.update(completed=completed,stalled_attempts=stalled,last_error=code,
+                                    attempt=job.attempts,limit=job.max_attempts)
+                    if stalled>=NO_PROGRESS_LIMIT:retry=False;recovery['state']='no_progress'
                 if not authorized(db,job):
                     close_job(job,'cancelled','access_or_configuration_changed')
                 elif retry and job.attempts<job.max_attempts:
                     job.status,job.lease_token,job.lease_expires_at='queued',None,None
-                    job.available_at=now()+timedelta(seconds=max(retry_after,min(60,2**job.attempts)))
+                    job.available_at=now()+timedelta(seconds=retry_delay(job.attempts,retry_after))
                     job.error_code=code
+                    recovery.update(state='scheduled',retry_at=job.available_at.isoformat())
                 else:
                     close_job(job,status,code)
+                    if recovery.get('state')!='no_progress':recovery['state']='stopped'
                     if job.kind == 'test_connection' and job.connection_id:
                         connection = db.get(VendorConnection,job.connection_id)
                         connection.status,connection.last_error_code = 'error',code
                         connection.last_verified_at,connection.updated_at = None,now()
+                if recovery:
+                    if job.status!='queued':recovery.pop('retry_at',None)
+                    job.result={**job.result,'recovery':recovery}
         except LeaseLost:
             pass
 
@@ -395,10 +421,13 @@ class Worker:
             self.finish_error(claimed,'storage_not_configured_or_unavailable')
         except LeaseLost:
             self.finish_error(claimed,'access_or_configuration_changed',status='cancelled')
+        except HeartbeatUnavailable as exc:
+            log.warning('Commerce job %s heartbeat unavailable (%s)',claimed.id,exc.safe_diagnostic.get('exception_type'))
+            self.finish_error(claimed,'heartbeat_database_unavailable',status='failed',retry=True,failure=exc)
         except Exception as exc:
             # Exception text, payloads, credentials and URLs must never be logged.
             log.warning('Commerce job %s failed (%s)',claimed.id,type(exc).__name__)
-            self.finish_error(claimed,'worker_error',status='failed',retry=True)
+            self.finish_error(claimed,'worker_error',status='failed',retry=True,failure=exc)
         finally:
             if getattr(claimed,'_vendor_catalog_lock',False):
                 try:
@@ -416,7 +445,8 @@ def engine_from_url(value):
     url=make_url(value)
     if (url.username or '').split('.')[0]!='commerce_worker' or url.drivername not in ('postgres','postgresql','postgresql+psycopg'):
         raise ValueError('Use the restricted commerce_worker PostgreSQL connection.')
-    engine=create_engine(url.set(drivername='postgresql+psycopg'),pool_size=1,max_overflow=0,
+    # Reserve capacity for lease renewal alongside product/page transactions.
+    engine=create_engine(url.set(drivername='postgresql+psycopg'),pool_size=2,max_overflow=0,
         pool_pre_ping=True,hide_parameters=True,connect_args={'sslmode':'require','connect_timeout':10})
     @event.listens_for(engine,'connect')
     def guard(connection,_record):

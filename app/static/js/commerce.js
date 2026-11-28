@@ -146,7 +146,7 @@
                 }
                 const job=await response.json();
                 if (!row.isConnected) continue;
-                row.querySelector('[data-job-status]').textContent=job.status;
+                row.querySelector('[data-job-status]').textContent=job.status_label || job.status;
                 row.querySelector('[data-job-progress]').textContent=job.progress+'%';
                 const count=row.querySelector('[data-job-count]');
                 if (count) count.textContent=`${job.completed_products || 0} / ${job.total_products || 0}`;

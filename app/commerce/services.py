@@ -13,6 +13,7 @@ from app.services import Forbidden, InvalidDetails, NotFound, active_user, audit
 from commerce_hub.models import ClientAppAccess, CommercialApp, DestinationTemplate, Export, Inventory, Job, MappingRule, Product, Vendor, VendorConnection, now
 from commerce_hub.models import CatalogHead, CatalogPublication, CatalogPublicationItem, CatalogWorkItem
 from app.commerce.presentation import product_row, product_details, run_statistics
+from commerce_hub.recovery import AUTO_ATTEMPTS,MAX_ATTEMPTS,can_resume
 
 FEATURES = ('connections', 'catalog', 'inventory', 'vendor_export', 'shopify_export')
 FEATURE_LABELS = {'connections': 'Connections', 'catalog': 'Shiloh catalog',
@@ -127,6 +128,10 @@ def job_identity(view,row,name,display_timezone):
     local=stamp.astimezone(zone)
     view.update(requested_by_name=name or 'Unknown user',run_date_display=local.strftime('%Y-%m-%d %H:%M'),
                 run_date_iso=local.isoformat(),run_timezone=str(zone),run_date_kind='Started' if row.started_at else 'Queued')
+    if view.get('retry_at'):
+        eligible=row.available_at
+        if eligible.tzinfo is None:eligible=eligible.replace(tzinfo=timezone.utc)
+        view['error_message']='Automatic retry queued for '+eligible.astimezone(zone).strftime('%Y-%m-%d %H:%M:%S')+' '+str(zone)+'. Completed records are saved.'
     return view
 
 
@@ -285,7 +290,8 @@ def enqueue_connection(auth_id, client_id, connection_id, kind, catalog_mode=Non
         if existing:
             raise InvalidDetails('This connection already has a queued or running job.')
         job = Job(client_id=client.id, vendor_id=row.vendor_id, connection_id=row.id,
-                  credential_version=row.credential_version, requested_by=user.id, kind=kind,payload=payload)
+                  credential_version=row.credential_version, requested_by=user.id, kind=kind,payload=payload,
+                  max_attempts=AUTO_ATTEMPTS if kind in ('catalog','inventory') and not payload.get('inventory_preview') else 3)
         db.add(job)
         db.flush()
         audit(db, user, client.id, 'commerce.job_queued', 'commerce_job', job.id, {'kind': kind})
@@ -318,12 +324,23 @@ def job_view(row,connection_type=None):
     result['published']=meta.get('phase')=='published'
     result['summary']=row.result.get('summary',{})
     result['started_at']=row.started_at
-    result['can_resume']=row.kind=='catalog' and bool(meta) and row.status in ('failed','blocked') and row.attempts<5 and row.error_code not in (
-        'catalog_source_changed_start_new_run','catalog_resume_configuration_changed','catalog_listing_changed_or_empty')
+    result['can_resume']=can_resume(row.kind,meta,row.status,row.attempts,row.error_code)
     if row.kind=='inventory' and not result['inventory_preview']:
-        result['can_resume']=bool(meta) and row.status in ('failed','blocked') and row.attempts<5 and row.error_code not in (
-            'inventory_source_changed_start_new_run','inventory_resume_configuration_changed','inventory_duplicate_id_start_new_run','inventory_run_superseded_start_new_run')
         result['catalog_label']='Available items'
+    result['attempts_limit']=row.max_attempts
+    recovery=row.result.get('recovery',{})
+    result['retry_at']=recovery.get('retry_at') if row.status=='queued' and row.error_code else None
+    result['status_label']='Retry scheduled' if result['retry_at'] else row.status.capitalize()
+    if result['retry_at']:
+        result['error_message']='Automatic recovery scheduled; saved progress will be reused.'
+    elif row.error_code=='worker_error':
+        result['error_message']='Worker stopped unexpectedly. Completed records are saved.'
+    elif row.error_code=='heartbeat_database_unavailable':
+        result['error_message']='Database heartbeat could not be renewed. Completed records are saved.'
+    if recovery.get('state')=='no_progress' and row.status in ('failed','blocked'):
+        result['error_message']+=' Recovery stopped after repeated attempts without progress.'
+    if row.status in ('failed','blocked') and row.attempts>=MAX_ATTEMPTS:
+        result['error_message']+=' Recovery limit reached; start a new run.'
     if row.started_at:
         from datetime import timezone
         end=row.finished_at or now()
@@ -374,7 +391,7 @@ def resume_job(auth_id,client_id,job_id):
             Job.status.in_(('queued','running')),Job.id!=row.id))
         if existing:
             raise InvalidDetails('Wait for the active connection job to finish.')
-        row.max_attempts=max(row.max_attempts,min(5,row.attempts+1))
+        row.max_attempts=max(row.max_attempts,min(MAX_ATTEMPTS,row.attempts+AUTO_ATTEMPTS))
         row.status,row.error_code,row.available_at,row.finished_at='queued',None,now(),None
         audit(db,user,client.id,'commerce.'+row.kind+'_resumed','commerce_job',row.id,{})
 
