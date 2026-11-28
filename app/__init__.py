@@ -20,7 +20,8 @@ def create_app(test_config=None):
     app.config['APP_DATABASE_URL'] = os.getenv('APP_DATABASE_URL')
     app.config['COMMERCE_HUB_ENABLED'] = os.getenv('COMMERCE_HUB_ENABLED','false').lower() in ('true','1','yes')
     app.config.update(INQUIRY_MIN_SECONDS=2, INQUIRY_SESSION_LIMIT=5,
-                      INQUIRY_EMAIL_LIMIT=3, INQUIRY_IP_LIMIT=10, INQUIRY_HOURLY_LIMIT=30)
+                      INQUIRY_EMAIL_LIMIT=3, INQUIRY_IP_LIMIT=10, INQUIRY_HOURLY_LIMIT=30,
+                      INQUIRY_PROFILE_LIMIT=5, INQUIRY_BODY_LIMIT=3, INQUIRY_MIN_WORDS=20)
     app.config['GOOGLE_PLACES_API_KEY'] = os.getenv('GOOGLE_PLACES_API_KEY')
     app.config['GOOGLE_PLACES_MONTHLY_LIMIT'] = int(os.getenv('GOOGLE_PLACES_MONTHLY_LIMIT', '500'))
     app.config['GOOGLE_PLACES_PER_MINUTE_LIMIT'] = int(os.getenv('GOOGLE_PLACES_PER_MINUTE_LIMIT', '10'))

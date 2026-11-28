@@ -48,7 +48,7 @@ class CatalogPresentationTests(unittest.TestCase):
         self.assertNotIn(b'<h3>Product images</h3>',page.data)
         self.assertNotIn(b'<h3>Run statistics</h3>',page.data)
         self.assertNotIn(b'commerce-statistics-metrics',page.data)
-        self.assertIn(b'<div class="commerce-statistics-grid">\n<dl class="commerce-run-overview">',page.data)
+        self.assertIn(b'<section class="form-panel commerce-run-summary"><h3>Summary</h3><dl class="commerce-run-overview">',page.data)
         self.assertIn(b'<h3>Categories captured</h3>',page.data)
         self.assertIn(b'<th>Images</th>',page.data)
 

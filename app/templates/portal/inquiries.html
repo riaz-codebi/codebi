@@ -3,25 +3,33 @@
 <div class="page-heading"><div><span class="breadcrumb">Primary Administration</span><h1>Inquiries</h1></div></div>
 <form method="get" class="list-toolbar">
     <div class="form-field"><label for="inquiry-search">Search inquiries</label><input id="inquiry-search" name="q" value="{{ query }}" maxlength="200" placeholder="Name, email, or company"></div>
+    <div class="form-field"><label for="inquiry-status">Status</label><select id="inquiry-status" name="status">{% for value,label in [('pending','New inquiries'),('legitimate','Legitimate'),('all','All inquiries')] %}<option value="{{ value }}" {% if status==value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
     <button class="admin-button secondary-button" type="submit">Search</button>
 </form>
 <div class="table-panel">
     <div class="table-scroll"><table class="admin-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Submitted</th><th>Inquiry</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Submitted</th><th>Inquiry</th><th>Status</th><th>Acknowledgment</th><th>Actions</th></tr></thead>
         <tbody>
         {% for inquiry in rows %}
         <tr>
             <td>{{ inquiry.name }}</td><td>{{ inquiry.email }}</td><td>{{ inquiry.company }}</td>
             <td><time datetime="{{ inquiry.created_at.isoformat() }}">{{ inquiry.created_at.isoformat()|central_time }}</time></td>
             <td><details><summary>View details</summary><p class="scope-description">{{ inquiry.details }}</p></details></td>
+            <td>{{ 'New' if inquiry.review_status=='pending' else 'Legitimate' }}</td>
+            <td>{{ {'none':'Not sent','sent':'Sent','failed':'Delivery unconfirmed','legacy':'Historical inquiry'}.get(inquiry.acknowledgement_status,'Not sent') }}</td>
+            <td><form method="post" action="{{ url_for('administration.review_inquiry',inquiry_id=inquiry.id) }}" class="row-actions">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if inquiry.review_status=='pending' %}<button type="submit" name="action" value="approve" class="admin-button">Mark legitimate</button>{% elif inquiry.acknowledgement_status in ('none','failed') %}<button type="submit" name="action" value="retry" class="admin-button secondary-button">Retry acknowledgment</button>{% endif %}
+                <button type="submit" name="action" value="delete" class="admin-button secondary-button">Delete</button>
+            </form></td>
         </tr>
-        {% else %}<tr><td colspan="5">No inquiries found.</td></tr>{% endfor %}
+        {% else %}<tr><td colspan="8">No inquiries found.</td></tr>{% endfor %}
         </tbody>
     </table></div>
     <div class="table-pagination"><span>{{ total }} result{{ '' if total == 1 else 's' }} &middot; Page {{ page }}</span>
         <div>
-            {% if page > 1 %}<a href="{{ url_for('administration.inquiries', q=query, page=page - 1) }}">&larr; Previous</a>{% endif %}
-            {% if page * 25 < total %}<a href="{{ url_for('administration.inquiries', q=query, page=page + 1) }}">Next &rarr;</a>{% endif %}
+            {% if page > 1 %}<a href="{{ url_for('administration.inquiries', q=query,status=status, page=page - 1) }}">&larr; Previous</a>{% endif %}
+            {% if page * 25 < total %}<a href="{{ url_for('administration.inquiries', q=query,status=status, page=page + 1) }}">Next &rarr;</a>{% endif %}
         </div>
     </div>
 </div>

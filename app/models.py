@@ -101,6 +101,12 @@ class PublicInquiry(Base):
     company = Column(Text, nullable=False)
     details = Column(Text, nullable=False)
     created_at = timestamp()
+    review_status = Column(Text, nullable=False, default='pending')
+    reviewed_by = Column(Uuid(as_uuid=False), ForeignKey('codebi.users.id'))
+    reviewed_at = Column(DateTime(timezone=True))
+    acknowledgement_status = Column(Text, nullable=False, default='none')
+    acknowledgement_started_at = Column(DateTime(timezone=True))
+    acknowledged_at = Column(DateTime(timezone=True))
 
 
 class User(Base):

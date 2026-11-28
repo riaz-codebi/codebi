@@ -7,7 +7,7 @@ class NotificationError(RuntimeError):
     """A send failure with a message safe to show in the portal."""
 
 
-def send_notification(to, subject, text):
+def send_notification(to, subject, text, *, html=None, idempotency_key=None):
     api_key = current_app.config['RESEND_API_KEY']
     if not api_key:
         raise NotificationError('The Flask app is missing its Resend API key.')
@@ -20,13 +20,16 @@ def send_notification(to, subject, text):
 
     resend.api_key = api_key
     try:
-        return resend.Emails.send({
+        params={
             'from': current_app.config['NOTIFICATION_FROM'],
             'reply_to': current_app.config['NOTIFICATION_REPLY_TO'],
             'to': to,
             'subject': subject,
             'text': text,
-        })
+        }
+        if html is not None:params['html']=html
+        if idempotency_key:return resend.Emails.send(params,{'idempotency_key':idempotency_key})
+        return resend.Emails.send(params)
     except ResendError as exc:
         code = str(exc.code)
         if exc.error_type == 'HttpClientError':

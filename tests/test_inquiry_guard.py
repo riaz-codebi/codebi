@@ -17,7 +17,10 @@ import test_registration as registration
 
 
 class InquiryGuardTests(unittest.TestCase):
-    setUp = registration.RegistrationTests.setUp
+    def setUp(self):
+        registration.RegistrationTests.setUp(self)
+        # Other abuse tests isolate their own checks using concise fixtures.
+        self.app.config['INQUIRY_MIN_WORDS']=1
     csrf = registration.RegistrationTests.csrf
     browser = registration.RegistrationTests.browser
 
@@ -41,6 +44,28 @@ class InquiryGuardTests(unittest.TestCase):
         self.assertEqual(response.status_code, 303)
         self.assertEqual(self.count(), 0)
         self.send_inquiry_confirmation.assert_not_called()
+
+    def test_twenty_word_minimum_blocks_direct_posts_preserves_fields_and_sends_no_email(self):
+        self.app.config['INQUIRY_MIN_WORDS']=20
+        words='Our team needs a reporting solution that combines sales and inventory data to improve planning and reduce manual spreadsheet work'.split()
+        short=' '.join(words[:19])+' !!! 123 456'
+        response=self.client.post('/contact',data=self.data(details=short))
+        self.assertEqual(response.status_code,422)
+        self.assertIn(b'Please provide at least 20 words',response.data)
+        self.assertIn(short.encode(),response.data)
+        self.assertEqual(self.count(),0)
+        self.send_inquiry_confirmation.assert_not_called()
+        self.assertEqual(self.client.post('/contact',data=self.data(details=' '.join(words[:20]))).status_code,303)
+        self.assertEqual(self.count(),1)
+
+    def test_word_count_accepts_unicode_and_counts_hyphenated_words_once(self):
+        self.app.config['INQUIRY_MIN_WORDS']=20
+        with self.app.test_request_context('/contact'):
+            values={'name':'Casey','email':'casey@example.com','company':'Example',
+                    'details':' '.join(['report-ready']*19)}
+            self.assertIn('at least 20 words',inquiry_guard.content_issue(values))
+            values['details']+=' análisis'
+            self.assertIsNone(inquiry_guard.content_issue(values))
 
     def test_missing_forged_and_other_session_token_do_not_send(self):
         data = self.data()
@@ -83,7 +108,7 @@ class InquiryGuardTests(unittest.TestCase):
             response = self.client.post('/contact', data=self.data(name=name, details=body, email='person@gmail.com'))
             self.assertEqual(response.status_code, 303)
         self.assertEqual(self.count(), 3)
-        self.assertEqual(self.send_inquiry_confirmation.call_count, 4)
+        self.send_inquiry_confirmation.assert_not_called()
 
     def test_duplicate_sends_neither_team_nor_sender_email(self):
         data = self.data()
@@ -91,7 +116,40 @@ class InquiryGuardTests(unittest.TestCase):
         self.assertEqual(self.client.post('/contact', data={**data, 'email': 'CASEY@example.com',
             'details': data['details'].upper()}).status_code, 303)
         self.assertEqual(self.count(), 1)
-        self.assertEqual(self.send_inquiry_confirmation.call_count, 2)
+        self.send_inquiry_confirmation.assert_not_called()
+
+    def test_rotating_address_campaign_and_generic_price_templates_do_not_send(self):
+        messages=('Hola, volia saber el seu preu.', 'Zdravo, htio sam znati vašu cijenu.',
+                  'Hæ, ég vildi vita verð þitt.', 'Ndewo, achọrọ m ịmara ọnụahịa gị.')
+        for index,body in enumerate(messages):
+            for name,company in (('Robertsum','google'),('New Name','Example Co')):
+                response=self.client.post('/contact',data=self.data(name=name,company=company,
+                    email=f'rotating{index}@example.com',details=body))
+                self.assertEqual(response.status_code,422)
+        self.assertEqual(self.count(),0)
+        self.send_inquiry_confirmation.assert_not_called()
+
+    def test_profile_and_body_limits_survive_rotating_emails_and_sessions(self):
+        self.app.config.update(INQUIRY_PROFILE_LIMIT=2,INQUIRY_BODY_LIMIT=2)
+        for index in range(3):
+            client=self.app.test_client()
+            response=client.post('/contact',data=self.data(client,email=f'profile{index}@example.com',
+                details=f'Help us build reporting for department {index}.'))
+            self.assertEqual(response.status_code,303 if index<2 else 429)
+        for index in range(3):
+            client=self.app.test_client()
+            response=client.post('/contact',data=self.data(client,name=f'Person {index}',company=f'Company {index}',
+                email=f'body{index}@example.com',details='Please help us improve our warehouse reports.'))
+            self.assertEqual(response.status_code,303 if index<2 else 429)
+        self.assertEqual(self.count(),4)
+
+    def test_real_google_contact_and_contextual_pricing_inquiries_pass(self):
+        for name,company,body in (
+            ('Robert Sum','Google','We need help building a Power BI dashboard for our team.'),
+            ('José García','Example Co','Hola, necesitamos un presupuesto para informes de Power BI.'),
+            ('Casey Smith','Example Co','What is your price for migrating our Flask application?')):
+            self.assertEqual(self.client.post('/contact',data=self.data(name=name,company=company,details=body)).status_code,303)
+        self.assertEqual(self.count(),3)
 
     def test_email_limit_survives_new_browser_sessions(self):
         for index in range(4):
@@ -99,7 +157,7 @@ class InquiryGuardTests(unittest.TestCase):
             response = client.post('/contact', data=self.data(client, details=f'Help us build reporting for division {index}.'))
             self.assertEqual(response.status_code, 303 if index < 3 else 429)
         self.assertEqual(self.count(), 3)
-        self.assertEqual(self.send_inquiry_confirmation.call_count, 4)
+        self.send_inquiry_confirmation.assert_not_called()
 
     def test_global_limit_bounds_random_senders_across_browser_sessions(self):
         self.app.config['INQUIRY_HOURLY_LIMIT'] = 2
@@ -108,10 +166,11 @@ class InquiryGuardTests(unittest.TestCase):
             response = client.post('/contact', data=self.data(client, email=f'person{index}@example.com'))
             self.assertEqual(response.status_code, 303 if index < 2 else 429)
         self.assertEqual(self.count(), 2)
-        self.assertEqual(self.send_inquiry_confirmation.call_count, 4)
+        self.send_inquiry_confirmation.assert_not_called()
 
     def test_session_and_public_ip_limits_ignore_spoofed_forwarded_headers(self):
-        self.app.config.update(INQUIRY_SESSION_LIMIT=2, INQUIRY_IP_LIMIT=2)
+        self.app.config.update(INQUIRY_SESSION_LIMIT=2, INQUIRY_IP_LIMIT=2,
+                               INQUIRY_BODY_LIMIT=10, INQUIRY_PROFILE_LIMIT=10)
         for index in range(3):
             response = self.client.post('/contact', data=self.data(email=f'session{index}@example.com'))
             self.assertEqual(response.status_code, 303 if index < 2 else 429)

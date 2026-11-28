@@ -25,8 +25,9 @@
         <div class="form-field">
             <label for="inquiry-details">What are you looking for?</label>
             <textarea id="inquiry-details" name="details" rows="4" maxlength="5000" required
+                      data-min-words="{{ config.INQUIRY_MIN_WORDS }}"
                       {% if inquiry_errors.get('details') %}aria-invalid="true" aria-describedby="inquiry-details-error"{% endif %}>{{ inquiry_values.details }}</textarea>
-            {% if inquiry_errors.get('details') %}<span class="field-error" id="inquiry-details-error">{{ inquiry_errors.details }}</span>{% endif %}
+            <span class="field-error" id="inquiry-details-error" aria-live="polite" {% if not inquiry_errors.get('details') %}hidden{% endif %}>{{ inquiry_errors.get('details','') }}</span>
         </div>
         <button class="provider-button inquiry-submit" type="submit">Send inquiry</button>
     </form>

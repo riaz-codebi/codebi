@@ -7,3 +7,4 @@
     {% include '_inquiry_form.html' %}
 </section>
 {% endblock %}
+{% block extra_scripts %}{{ super() }}<script src="{{ url_for('static',filename='js/inquiry-form.js') }}"></script>{% endblock %}

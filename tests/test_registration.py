@@ -22,7 +22,7 @@ class RegistrationTests(unittest.TestCase):
         sender = patch('app.auth.send_notification')
         self.send_confirmation = sender.start()
         self.addCleanup(sender.stop)
-        inquiry_sender = patch('app.inquiries.send_notification')
+        inquiry_sender = patch('resend.Emails.send')
         self.send_inquiry_confirmation = inquiry_sender.start()
         self.addCleanup(inquiry_sender.stop)
         self.identity = services.Identity(NEW_AUTH, 'signup@example.com', True, 'New Person')
@@ -77,31 +77,29 @@ class RegistrationTests(unittest.TestCase):
         self.assertEqual(contact.data.count(b'Send inquiry'), 1)
         self.assertNotIn(b'Good fit for', contact.data)
 
-    def test_public_inquiry_is_saved_and_emailed_without_creating_an_account(self):
+    def test_public_inquiry_is_queued_without_email_or_creating_an_account(self):
         before = self.counts()
         values = {'name': 'Casey', 'email': 'casey@example.com', 'company': 'Example Co',
-                  'details': 'Help with reporting', 'csrf_token': self.csrf()}
+                  'details': 'We need help with reporting across sales and inventory so our team can plan purchases and reduce manual spreadsheet work', 'csrf_token': self.csrf()}
         page = self.client.get('/contact')
         values['inquiry_token'] = re.search(rb'name="inquiry_token" value="([^"]+)"', page.data).group(1).decode()
         self.assertEqual(self.client.post('/contact', data={**values, 'csrf_token': ''}).status_code, 400)
         self.assertEqual(self.client.post('/contact', data={**values, 'email': 'invalid'}).status_code, 422)
         self.send_inquiry_confirmation.assert_not_called()
         response = self.client.post('/contact', data=values, follow_redirects=True)
-        self.assertIn(b'We received your inquiry', response.data)
-        self.assertEqual([call.args[0] for call in self.send_inquiry_confirmation.call_args_list],
-                         ['team@codebisolutions.com', values['email']])
-        response = self.client.post('/contact', data={**values, 'details': 'More details'}, follow_redirects=True)
-        self.assertIn(b'We received your inquiry', response.data)
-        self.assertEqual(self.send_inquiry_confirmation.call_count, 3)
-        self.assertEqual(self.send_inquiry_confirmation.call_args.args[0], 'team@codebisolutions.com')
+        self.assertIn(b'Our onboarding team will review your inquiry', response.data)
+        self.send_inquiry_confirmation.assert_not_called()
+        response = self.client.post('/contact', data={**values, 'details': 'Our current reports require manual updates every week and we need a reliable dashboard with accurate totals for each department'}, follow_redirects=True)
+        self.assertIn(b'Our onboarding team will review your inquiry', response.data)
+        self.send_inquiry_confirmation.assert_not_called()
         admin_view = self.browser(fixtures.ADMIN).get('/portal/admin/inquiries?q=casey')
         self.assertEqual(admin_view.status_code, 200)
-        self.assertIn(b'Help with reporting', admin_view.data)
-        self.assertIn(b'More details', admin_view.data)
+        self.assertIn(b'We need help with reporting across sales and inventory so our team can plan purchases and reduce manual spreadsheet work', admin_view.data)
+        self.assertIn(b'Our current reports require manual updates every week and we need a reliable dashboard with accurate totals for each department', admin_view.data)
         self.assertEqual(self.browser(fixtures.CLIENT).get('/portal/admin/inquiries').status_code, 403)
         with self.app.app_context(), transaction() as db:
             self.assertEqual(set(db.scalars(select(PublicInquiry.details))),
-                             {'Help with reporting', 'More details'})
+                             {'We need help with reporting across sales and inventory so our team can plan purchases and reduce manual spreadsheet work', 'Our current reports require manual updates every week and we need a reliable dashboard with accurate totals for each department'})
         self.assertEqual(self.counts(), before)
 
     def test_only_unknown_verified_identity_is_eligible(self):

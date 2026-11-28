@@ -157,14 +157,20 @@
 @media(max-width:800px) { .commerce-grid { grid-template-columns:1fr; } }
 @media(max-width:480px) { .commerce-dialog-options { grid-template-columns:1fr; } .commerce-heading-actions { width:100%; } }
 
-.commerce-run-overview { padding:16px 18px; margin:0; border:1px solid #dfe7f3; border-radius:10px; background:#fff; }
-.commerce-run-overview > div { display:grid; grid-template-columns:minmax(110px,150px) minmax(0,1fr); align-items:baseline; gap:16px; padding:9px 0; }
+.commerce-run-overview { padding:0; margin:0; }
+.commerce-run-overview > div { display:grid; grid-template-columns:minmax(100px,1fr) minmax(0,1fr); align-items:baseline; gap:12px; padding:9px 0; }
 .commerce-run-overview dt { font-size:12px; color:#64748b; }
 .commerce-run-overview dd { margin:0; font-size:13px; color:#263956; overflow-wrap:anywhere; }
-.commerce-statistics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.commerce-statistics-grid { display:grid; grid-template-columns:minmax(240px,300px) minmax(0,1fr); align-items:start; gap:16px; }
 .commerce-statistics-grid .form-panel { padding:16px; margin:0; }
 .commerce-statistics-grid h3 { font-size:15px; margin:0 0 10px; }
 .commerce-statistics-grid .admin-table td,.commerce-statistics-grid .admin-table th { padding:9px 10px; }
+.commerce-categories-scroll { max-height:600px; overflow:auto; scrollbar-gutter:stable; }
+.admin-table.commerce-categories-table { table-layout:fixed; white-space:normal; }
+.commerce-categories-table th { position:sticky; top:0; z-index:1; }
+.commerce-categories-table td:first-child { overflow-wrap:anywhere; }
+.commerce-categories-table th:last-child,.commerce-categories-table td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+@media(max-width:900px) { .commerce-statistics-grid { grid-template-columns:minmax(0,1fr); } }
 .commerce-product-dialog { width:min(1040px,calc(100vw - 32px)); max-width:none; max-height:calc(100dvh - 32px); padding:0; margin:auto; border:1px solid #dce3ef; border-radius:12px; background:#fff; color:#263956; font:inherit; }
 .commerce-product-dialog::backdrop { background:#15254077; }
 .commerce-product-dialog > header { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 20px; border-bottom:1px solid #e2e9f3; background:#fff; }

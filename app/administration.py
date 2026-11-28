@@ -76,7 +76,10 @@ def page_args():
 @admin_required
 def inquiries():
     query, page = page_args()
-    statement = select(PublicInquiry)
+    status=request.args.get('status','pending')
+    if status not in ('pending','legitimate','all'):status='pending'
+    statement = select(PublicInquiry).where(PublicInquiry.review_status!='deleted')
+    if status!='all':statement=statement.where(PublicInquiry.review_status==status)
     if query:
         statement = statement.where(or_(*(column.icontains(query, autoescape=True)
             for column in (PublicInquiry.name, PublicInquiry.email, PublicInquiry.company))))
@@ -88,7 +91,21 @@ def inquiries():
     except (SQLAlchemyError, RuntimeError):
         raise AdminUnavailable from None
     return render_template('portal/inquiries.html', portal_user=g.portal_user, rows=rows,
-                           total=total, query=query, page=page)
+                           total=total, query=query, page=page, status=status)
+
+
+@administration.post('/admin/inquiries/<uuid:inquiry_id>/review')
+@admin_required
+def review_inquiry(inquiry_id):
+    check_csrf()
+    from app.inquiry_review import review
+    try:
+        message=call(review,inquiry_id=str(inquiry_id),action=request.form.get('action'))
+    except InvalidDetails as exc:
+        flash(str(exc),'error')
+    else:
+        flash(message,'success')
+    return redirect(url_for('administration.inquiries',status='all'),code=303)
 
 
 @administration.get('/admin/clients')

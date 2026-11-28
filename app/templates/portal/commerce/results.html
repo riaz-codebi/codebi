@@ -6,7 +6,7 @@
 {% if data.coverage_note %}<p class="commerce-coverage-note">{% if data.available_items_only %}Only available items from Shiloh inventory were downloaded. {% endif %}{{ data.coverage_note }}</p>{% endif %}
 {% if data.job is defined %}
 <div class="commerce-statistics-grid">
-<dl class="commerce-run-overview"><div><dt>Job ID</dt><dd title="{{ data.job.id }}">{{ data.job.id[:8] }}</dd></div><div><dt>Run by</dt><dd>{{ data.job.requested_by_name }}</dd></div><div><dt>Run date</dt><dd title="{{ data.job.run_timezone }}">{{ data.job.run_date_display }}</dd></div><div><dt>Duration</dt><dd>{{ data.job.elapsed_seconds // 60 }}m {{ data.job.elapsed_seconds % 60 }}s</dd></div><div><dt>Status</dt><dd>{{ data.job.status|capitalize }}</dd></div>{% for label,value in data.statistics.metrics[:2] %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>
+<section class="form-panel commerce-run-summary"><h3>Summary</h3><dl class="commerce-run-overview"><div><dt>Job ID</dt><dd title="{{ data.job.id }}">{{ data.job.id[:8] }}</dd></div><div><dt>Run by</dt><dd>{{ data.job.requested_by_name }}</dd></div><div><dt>Run date</dt><dd title="{{ data.job.run_timezone }}">{{ data.job.run_date_display }}</dd></div><div><dt>Duration</dt><dd>{{ data.job.elapsed_seconds // 60 }}m {{ data.job.elapsed_seconds % 60 }}s</dd></div><div><dt>Status</dt><dd>{{ data.job.status|capitalize }}</dd></div>{% for label,value in data.statistics.metrics[:2] %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl></section>
 {% include 'portal/commerce/run_statistics.html' %}
 </div>
 {% endif %}

@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import sqlite3
 import time
+import unicodedata
 
 from flask import current_app, request, session
 from itsdangerous import BadSignature, URLSafeTimedSerializer
@@ -35,11 +36,30 @@ def check_form(token):
         return 'invalid'
 
 
+def normalized_text(value):
+    value=unicodedata.normalize('NFKD',value.casefold())
+    return ' '.join(''.join(c if c.isalnum() else ' ' for c in value if not unicodedata.combining(c)).split())
+
+
 def content_issue(values):
     # Names and sender fields must be single-line text, never headers or markup.
     if any(any(ord(c) < 32 or ord(c) == 127 for c in values[k]) for k in ('name', 'email', 'company')):
         return 'Enter your name, email and company without line breaks or control characters.'
     body = values['details']
+    # Observed rotating-address campaign. Match the combined profile, not a
+    # language, email domain, or a legitimate company name by itself.
+    if normalized_text(values['name'])=='robertsum' and normalized_text(values['company'])=='google':
+        return 'Please provide your full name, company and a description of your project.'
+    generic_prices={normalized_text(message) for message in (
+        'Hola, volia saber el seu preu.',
+        'Zdravo, htio sam znati vašu cijenu.',
+        'Hæ, ég vildi vita verð þitt.',
+        'Ndewo, achọrọ m ịmara ọnụahịa gị.',
+        'Hello, I wanted to know your price.',
+        'Hi, I wanted to know your price.',
+    )}
+    if normalized_text(body) in generic_prices:
+        return 'Please tell us which service you need and briefly describe your project.'
     if any(ord(c) < 32 and c not in '\r\n\t' for c in body):
         return 'Describe your project using plain text.'
     # The screenshot's mixed-case random identifiers are not project descriptions.
@@ -55,10 +75,16 @@ def content_issue(values):
         return 'Describe your project in words and include no more than three links.'
     if re.search(r'<\s*(?:script|iframe)\b|\[url[=\]]', body, re.I):
         return 'Describe your project using plain text and ordinary links.'
+    # Count words containing letters; punctuation, emoji and number-only padding
+    # do not satisfy the minimum. Hyphenated words and contractions count once.
+    words=re.findall(r"[^\W\d_][^\W_]*(?:['’\-][^\W_]+)*",body,re.UNICODE)
+    minimum=current_app.config['INQUIRY_MIN_WORDS']
+    if len(words)<minimum:
+        return f'Please provide at least {minimum} words describing the solution you need, your goals and the challenges you want to solve.'
     return None
 
 
-def reserve_submission(email):
+def reserve_submission(email,values=None):
     """Atomic limits shared by Gunicorn workers on this host; persist only HMAC keys.
 
     Do not trust arbitrary forwarded headers. Private/loopback peers may be Nginx;
@@ -72,6 +98,13 @@ def reserve_submission(email):
         ('email:' + email, 900, app.config['INQUIRY_EMAIL_LIMIT']),
         ('global', 3600, app.config['INQUIRY_HOURLY_LIMIT']),
     ]
+    if values:
+        # Rotating email addresses/sessions must not bypass campaign limits.
+        # These identities are HMACed below; no raw names or messages are stored.
+        entries.extend([
+            ('profile:'+normalized_text(values['name'])+'|'+normalized_text(values['company']),3600,app.config['INQUIRY_PROFILE_LIMIT']),
+            ('body:'+normalized_text(values['details']),3600,app.config['INQUIRY_BODY_LIMIT']),
+        ])
     try:
         address = ipaddress.ip_address(request.remote_addr or '')
         if address.is_global:
