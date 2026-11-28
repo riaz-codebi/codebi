@@ -9,6 +9,8 @@ from urllib.parse import parse_qs,urlsplit,urljoin
 from commerce_hub.connector_contracts import ConnectorLoginError
 from commerce_hub.vendors.shiloh_tack.inventory_login import InventoryBrowser,allowed_url,approved_url,clean_path
 
+INVENTORY_SCREEN='/pages/sp/sp700000.aspx'
+
 AVAILABLE_FILTER=r'''() => {
     const labels=[...document.querySelectorAll('label,span,div')].filter(el=>/^Show Available Items Only$/i.test((el.textContent||'').trim()) && el.getClientRects().length);
     for(const label of labels.reverse()) {
@@ -112,7 +114,9 @@ def parse_snapshot(snapshot,allow_empty=False):
 
 class InventoryPreviewBrowser(InventoryBrowser):
     def __init__(self):
-        super().__init__();self.reading_inventory=False;self.read_pages={'/main','/main.aspx'};self.blocked_callbacks=set()
+        super().__init__();self.reading_inventory=False;self.read_pages={'/main','/main.aspx',INVENTORY_SCREEN};self.blocked_callbacks=set()
+        # The portal can open Catalog without an observable navigation GET.
+        # Its known screen must still accept guarded data-loading callbacks.
 
     def additional_request_allowed(self,request):
         if not self.reading_inventory or not allowed_url(request.url,'GET'):return False
@@ -169,9 +173,8 @@ class InventoryPreviewBrowser(InventoryBrowser):
         for response in reversed(navigation_responses):
             target=response.get('target_path','')
             destination=urljoin(self.page.url,target)
-            if response['status']==200 and allowed_url(destination,'GET') and clean_path(urlsplit(destination).path)=='/pages/sp/sp700000.aspx':
-                self.read_pages.add('/pages/sp/sp700000.aspx')
-                existing=next((frame for frame in self.page.frames if clean_path(urlsplit(frame.url).path)=='/pages/sp/sp700000.aspx'),None)
+            if response['status']==200 and allowed_url(destination,'GET') and clean_path(urlsplit(destination).path)==INVENTORY_SCREEN:
+                existing=next((frame for frame in self.page.frames if clean_path(urlsplit(frame.url).path)==INVENTORY_SCREEN),None)
                 if existing is None:
                     screen=next((frame for frame in self.page.frames if clean_path(urlsplit(frame.url).path)=='/frames/default.aspx'),None)
                     if screen is not None:

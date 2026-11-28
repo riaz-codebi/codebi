@@ -458,3 +458,12 @@ Combined live acceptance succeeded on 27 November 2026: catalog test
 source job IDs remained unchanged. Inventory navigation now tolerates the portal
 shell starting the same frame navigation while the reader opens the Catalog URL;
 the resulting grid must still pass all sample checks before verification succeeds.
+
+On the Droplet, a subsequent grid diagnostic showed the expected inventory
+headers but no loaded rows, with /pages/sp/sp700000.aspx in blocked_read_callbacks.
+That known inventory screen is now seeded into the read-page allowlist: the
+portal does not always produce an observable navigation GET before its data
+callback. Existing host checks, callback-signature checks and cart/write-command
+denials remain in force. Validate the patch on the Droplet after pulling it; stop
+the local development worker during that check so the shared queue is processed
+by the intended server.

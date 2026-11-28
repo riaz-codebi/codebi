@@ -102,3 +102,20 @@ class InventoryPreviewTests(unittest.TestCase):
         self.assertTrue(browser.additional_request_allowed(request))
         request.url=request.url.replace('4ad314ac','9ad314ac')
         self.assertFalse(browser.additional_request_allowed(request))
+
+    def test_known_inventory_callback_does_not_require_prior_navigation_get(self):
+        for path in ('/pages/sp/sp700000.aspx','/(W(1))/Pages/SP/SP700000.aspx'):
+            with self.subTest(path=path):
+                browser=InventoryPreviewBrowser()
+                request=Mock(url='https://'+HOST+path,method='POST',post_data='__CALLBACKID=grid&__CALLBACKPARAM=Refresh')
+                self.assertFalse(browser.additional_request_allowed(request))
+                browser.reading_inventory=True
+                self.assertTrue(browser.additional_request_allowed(request))
+                for command in ('AddToCart','Checkout','Save','Delete','Insert'):
+                    request.post_data='__CALLBACKID=grid&__CALLBACKPARAM='+command
+                    self.assertFalse(browser.additional_request_allowed(request))
+                request.post_data='unrecognized=form'
+                self.assertFalse(browser.additional_request_allowed(request))
+                request.post_data='__CALLBACKID=grid&__CALLBACKPARAM=Refresh'
+                request.url='https://evil.example'+path
+                self.assertFalse(browser.additional_request_allowed(request))
