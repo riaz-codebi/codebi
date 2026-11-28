@@ -1,0 +1,38 @@
+{% extends 'portal/commerce/_layout.html' %}
+{% block portal_content %}
+<a class="back-link" href="{{ url_for('commerce.home',client_id=client_id,tab='exports') }}">Back to exports</a>
+<div class="page-heading"><div><span class="breadcrumb">{{ data.client.name }} / Commerce Hub / Exports</span><h1>{{ data.destination.label }}</h1></div><span class="count-badge">{{ 'Version ' ~ data.version if data.version else 'New mapping' }}</span></div>
+{% include 'portal/commerce/tabs.html' %}
+<p class="commerce-coverage-note">Choose the columns to download and their values. Price uses the source amount unless you choose a fixed value. Review the selling price before importing.</p>
+{% if data.error %}<div class="portal-notice error" role="alert">{{ data.error }}</div>{% endif %}
+<div class="commerce-mapping-layout">
+<form method="post" data-export-mapping>
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="base_mapping" value="{{ data.mapping_id }}">
+<input type="hidden" name="sample_product_id" value="{{ data.sample.product_id if data.sample else '' }}" data-selected-sample>
+<div class="table-panel"><div class="table-scroll"><table class="admin-table commerce-mapping-table"><thead><tr><th>Include</th><th>Shopify field</th><th>Value source</th><th>Mapping / value</th></tr></thead><tbody>
+{% for row in data.rows %}<tr data-mapping-row>
+<td><input type="checkbox" name="include_{{ row.index }}" aria-label="Include {{ row.name }}" {% if row.included %}checked{% endif %} {% if row.required %}aria-required="true"{% endif %}></td><td><label for="mapping-mode-{{ row.index }}">{{ row.name }}{% if row.required %} <span class="required">*</span>{% endif %}</label></td>
+<td><select id="mapping-mode-{{ row.index }}" name="mode_{{ row.index }}" data-mapping-mode aria-label="Value source for {{ row.name }}">{% for value,label in [('field','Vendor field'),('constant','Fixed value'),('automatic','Default value')] %}<option value="{{ value }}" {% if row.mode==value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></td>
+<td><select name="field_{{ row.index }}" data-mapping-value="field" aria-label="Vendor field for {{ row.name }}" {% if row.mode!='field' %}hidden{% endif %}><option value="">Select vendor field</option>{% for key,label in data.fields.items() %}<option value="{{ key }}" {% if row.field==key %}selected{% endif %}>{{ label }}</option>{% endfor %}{% if row.field and row.field not in data.fields %}<option value="{{ row.field }}" selected>Unavailable field - choose another</option>{% endif %}</select>
+<select name="automatic_{{ row.index }}" data-mapping-value="automatic" aria-label="Default value for {{ row.name }}" {% if row.mode!='automatic' %}hidden{% endif %}><option value="">Select default value</option>{% for key,label in data.automatic.items() %}<option value="{{ key }}" {% if row.automatic==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<input type="text" name="constant_{{ row.index }}" data-mapping-value="constant" value="{{ row.constant }}" maxlength="2000" aria-label="Fixed value for {{ row.name }}" {% if row.mode!='constant' %}hidden{% endif %}></td>
+</tr>{% endfor %}</tbody></table></div></div>
+<div class="form-actions"><a class="admin-button secondary-button" href="{{ url_for('commerce.home',client_id=client_id,tab='exports') }}">Cancel</a><button class="admin-button" type="submit">Save mapping</button></div>
+</form>
+<aside class="commerce-mapping-sample" aria-labelledby="mapping-sample-heading" data-mapping-sample>
+  <header><h2 id="mapping-sample-heading">Sample product</h2>
+  <form method="get" data-sample-selector data-sample-url="{{ url_for('commerce.export_mapping_sample',client_id=client_id,destination_id=data.destination.id) }}">
+    <label for="sample-product-id">Product ID</label>
+    <div class="commerce-sample-query"><input id="sample-product-id" type="text" name="sample_product_id" value="{{ data.sample.product_id if data.sample else '' }}" maxlength="200" autocomplete="off" required {% if not data.sample %}disabled{% endif %}><button type="submit" class="icon-button" aria-label="Load sample product" title="Load sample product" {% if not data.sample %}disabled{% endif %}>{{ icon('search') }}</button></div>
+  </form><button type="button" class="text-button commerce-view-defaults" data-view-default-values aria-haspopup="dialog" aria-controls="mapping-default-values-dialog" {% if not data.sample %}disabled{% endif %}>View default values</button><p role="alert" data-sample-error hidden></p></header>
+  <div class="commerce-sample-values" data-sample-values tabindex="0" aria-label="Sample field values">
+  {% with sample=data.sample %}{% include 'portal/commerce/mapping_sample.html' %}{% endwith %}
+  </div>
+</aside>
+</div>
+<dialog id="mapping-default-values-dialog" class="commerce-default-values-dialog" aria-labelledby="mapping-default-values-heading">
+  <header><h2 id="mapping-default-values-heading">Default values</h2><button type="button" class="text-button" data-close-default-values aria-label="Close default values">&times;</button></header>
+  <div class="commerce-default-values-body" data-default-values-body></div>
+</dialog>
+{% endblock %}
+{% block extra_scripts %}{{ super() }}<script src="{{ url_for('static',filename='js/commerce-export-mapping.js') }}"></script>{% endblock %}

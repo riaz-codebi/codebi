@@ -1,0 +1,27 @@
+# Example for the existing Ubuntu droplet. Review paths/user before installing.
+[Unit]
+Description=CodeBI Commerce Hub worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/codebisolutions.com
+EnvironmentFile=/var/www/codebisolutions.com/.env
+Environment=PLAYWRIGHT_BROWSERS_PATH=/var/lib/codebi-playwright
+ExecStart=/var/www/codebisolutions.com/venv/bin/python -B -m commerce_hub.worker
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=768M
+CPUQuota=75%
+
+[Install]
+WantedBy=multi-user.target

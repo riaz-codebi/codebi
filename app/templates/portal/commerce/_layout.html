@@ -1,0 +1,3 @@
+{% extends 'portal/base.html' %}
+{% block extra_styles %}{{ super() }}<link rel="stylesheet" href="{{ url_for('static', filename='css/commerce.css') }}">{% endblock %}
+{% block extra_scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/commerce.js') }}"></script>{% endblock %}

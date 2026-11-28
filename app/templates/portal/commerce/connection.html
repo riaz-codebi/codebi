@@ -1,0 +1,21 @@
+{% extends 'portal/commerce/_layout.html' %}
+{% block portal_content %}
+{% include 'portal/commerce/tabs.html' %}
+<a class="back-link" href="{{ url_for('commerce.home',client_id=client_id) }}">Back to Commerce Hub</a>
+<div class="page-heading"><div><span class="breadcrumb">{{ data.client.name }} / {{ data.connection.vendor }}</span><h1>{{ data.connection.type|capitalize }} connection</h1></div></div>
+<form method="post" class="admin-form commerce-connection" data-connection-form data-editing="{{ 'true' if error else 'false' }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if error %}<p class="form-alert" role="alert">{{ error }}</p>{% endif %}
+    <fieldset class="form-panel">
+        <legend>Connection settings</legend>
+        <div class="scope-form-fields">
+            <div class="form-field"><label for="portal-url">Portal URL</label><input id="portal-url" name="portal_url" type="url" maxlength="1000" value="{{ portal_url }}" {% if data.internal %}data-connection-editable{% endif %} {% if not error or not data.internal %}readonly{% endif %}></div>
+            <div class="form-grid">
+                <div class="form-field"><label for="username">Username</label><input id="username" name="username" value="{{ username }}" maxlength="254" autocomplete="off" data-connection-editable {% if not error %}readonly{% endif %}></div>
+                <div class="form-field"><label for="password">Password</label><input id="password" name="password" type="password" maxlength="4096" autocomplete="new-password" value="" placeholder="{{ '*****' if data.connection.has_password else '' }}" data-saved-password="{{ 'true' if data.connection.has_password else 'false' }}" data-connection-editable {% if not error %}readonly{% endif %}></div>
+            </div>
+        </div>
+    </fieldset>
+    <div class="form-actions"><a class="admin-button secondary-button" href="{{ url_for('commerce.home',client_id=client_id) }}">Cancel</a><button class="admin-button" type="{{ 'submit' if error else 'button' }}" data-connection-edit>{{ 'Save' if error else 'Edit' }}</button></div>
+</form>
+{% endblock %}

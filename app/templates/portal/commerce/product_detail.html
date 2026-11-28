@@ -1,0 +1,21 @@
+{% from 'portal/commerce/product_content.html' import content_blocks %}
+<section data-product-detail>
+  <h2 class="commerce-product-name">{{ product.name }}</h2>
+  {% if product.badges %}<div class="commerce-product-options">{% for badge in product.badges %}<span>{{ badge }}</span>{% endfor %}</div>{% endif %}
+  <div class="commerce-product-overview">
+    <section class="commerce-product-gallery" data-product-gallery aria-label="Product images">
+    {% if product.images %}
+      <div class="commerce-gallery-stage" tabindex="0" data-gallery-stage><img data-gallery-image src="{{ product.images[0].url }}" alt="{{ product.images[0].alt }}" referrerpolicy="no-referrer"><p data-gallery-error hidden>Image unavailable</p></div>
+      <div class="commerce-gallery-controls"><button type="button" class="text-button" data-gallery-prev aria-label="Previous image" {% if product.images|length<2 %}disabled{% endif %}>&larr;</button><span data-gallery-count aria-live="polite">1 / {{ product.images|length }}</span><button type="button" class="text-button" data-gallery-next aria-label="Next image" {% if product.images|length<2 %}disabled{% endif %}>&rarr;</button></div>
+      <div class="commerce-gallery-thumbnails">{% for image in product.images %}<button type="button" data-gallery-index="{{ loop.index0 }}" data-image-url="{{ image.url }}" data-image-alt="{{ image.alt }}" aria-label="View image {{ loop.index }} of {{ product.images|length }}" aria-pressed="{{ 'true' if loop.first else 'false' }}"><img src="{{ image.url }}" alt="" loading="lazy" referrerpolicy="no-referrer"></button>{% endfor %}</div>
+    {% else %}<div class="commerce-gallery-empty">No images available</div>{% endif %}
+    </section>
+    <section class="commerce-product-facts">
+      <dl><div><dt>Product ID</dt><dd>{{ product.key }}</dd></div>{% if product.price %}<div><dt>Price</dt><dd>{{ product.price }}</dd></div>{% endif %}{% if product.category %}<div><dt>Category</dt><dd>{{ product.category }}</dd></div>{% endif %}{% if product.availability %}<div><dt>Availability</dt><dd>{{ product.availability }}</dd></div>{% endif %}</dl>
+      {% for option in product.options %}<div class="commerce-product-options"><h3>{{ option.label }}</h3><div>{% for label in option.choices %}<span>{{ label }}</span>{% endfor %}</div></div>{% endfor %}
+      {% if product.quantity_pricing %}<h3>Quantity pricing</h3><table class="admin-table"><thead><tr><th>Quantity</th><th>Price</th></tr></thead><tbody>{% for tier in product.quantity_pricing %}<tr><td>{{ tier.quantity }}</td><td>{{ tier.price }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+    </section>
+  </div>
+  {% if product.tabs %}<section class="commerce-product-content"><nav role="tablist" aria-label="Product information">{% for tab in product.tabs %}<button type="button" role="tab" id="product-tab-{{ loop.index0 }}" data-product-tab="{{ loop.index0 }}" aria-controls="product-panel-{{ loop.index0 }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}">{{ tab.label }}</button>{% endfor %}</nav>
+  {% for tab in product.tabs %}<section role="tabpanel" id="product-panel-{{ loop.index0 }}" aria-labelledby="product-tab-{{ loop.index0 }}" data-product-panel="{{ loop.index0 }}" {% if not loop.first %}hidden{% endif %}>{% if tab.blocks %}{{ content_blocks(tab.blocks) }}{% else %}<p class="commerce-product-plain-text">{{ tab.text }}</p>{% endif %}</section>{% endfor %}</section>{% endif %}
+</section>

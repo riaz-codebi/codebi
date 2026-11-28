@@ -1,0 +1,1 @@
+"""Shiloh Tack vendor integration."""

@@ -1,0 +1,7 @@
+<nav class="commerce-tabs" aria-label="Commerce Hub">
+  <a href="{{ url_for('commerce.home',client_id=client_id,tab='connections') }}" {% if active_tab=='connections' %}aria-current="page"{% endif %}>Connections</a>
+  <a href="{{ url_for('commerce.home',client_id=client_id,tab='jobs') }}" {% if active_tab=='jobs' %}aria-current="page"{% endif %}>Jobs</a>
+  {% if 'catalog' in data.features %}<a href="{{ url_for('commerce.results',client_id=client_id,kind='catalog') }}" {% if active_tab=='products' %}aria-current="page"{% endif %}>Products</a>{% endif %}
+  {% if 'inventory' in data.features %}<a href="{{ url_for('commerce.results',client_id=client_id,kind='inventory') }}" {% if active_tab=='inventory' %}aria-current="page"{% endif %}>Inventory</a>{% endif %}
+  <a href="{{ url_for('commerce.home',client_id=client_id,tab='exports') }}" {% if active_tab=='exports' %}aria-current="page"{% endif %}>Exports</a>
+</nav>

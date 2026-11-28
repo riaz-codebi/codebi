@@ -5,6 +5,11 @@
     {% if inquiry_errors.get('_form') %}<p class="auth-alert" role="alert">{{ inquiry_errors['_form'] }}</p>{% endif %}
     <form class="public-inquiry-form" method="post" action="{{ url_for(request.endpoint, _anchor='inquiry') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="inquiry_token" value="{{ inquiry_token }}">
+        <div class="inquiry-trap" aria-hidden="true">
+            <label for="inquiry-website">Leave this field empty</label>
+            <input id="inquiry-website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
         {% for field, label, type, limit, autocomplete in [
             ('name', 'Name', 'text', 200, 'name'), ('email', 'Email', 'email', 254, 'email'),
             ('company', 'Company name', 'text', 200, 'organization')

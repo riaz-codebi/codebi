@@ -1,0 +1,25 @@
+<div data-job-history-content data-job-total="{{ data.job_pagination.total }}">
+<div class="table-panel"><div class="table-scroll"><table class="admin-table commerce-jobs-table"><thead><tr><th scope="col">Job ID</th><th scope="col">Job</th><th scope="col">Category</th><th scope="col">Run by</th><th scope="col" title="Times shown in {{ data.client.timezone }}">Run date</th><th scope="col">Status</th><th scope="col">Progress</th><th scope="col">Products</th><th scope="col">Published</th><th scope="col">Duration</th><th scope="col">Result</th><th scope="col">Actions</th></tr></thead><tbody>
+{% for job in data.jobs %}
+<tr {% if job.status in ('queued','running') %}data-commerce-job="{{ url_for('commerce.job',client_id=client_id,job_id=job.id) }}"{% endif %}>
+<td class="commerce-job-id" title="{{ job.id }}">{{ job.id[:8] }}</td>
+<td data-job-label>{{ job.job_label }}</td>
+<td>{{ job.catalog_label or '\u2014' }}</td>
+<td class="commerce-job-requester" title="{{ job.requested_by_name }}">{{ job.requested_by_name }}</td>
+<td><time data-job-run-date datetime="{{ job.run_date_iso }}" title="{{ job.run_date_kind }} / {{ job.run_timezone }}">{{ job.run_date_display }}</time></td>
+<td data-job-status>{{ job.status|capitalize }}</td>
+<td data-job-progress title="{{ job.stage|replace('_',' ') }}">{{ job.progress }}%</td>
+<td>{% if job.kind=='catalog' or (job.kind=='inventory' and not job.inventory_preview) %}<span data-job-count>{{ job.completed_products }} / {{ job.total_products }}</span>{% else %}&mdash;{% endif %}</td>
+<td>{% if job.kind=='catalog' or (job.kind=='inventory' and not job.inventory_preview) %}<span data-job-published>{{ 'Yes' if job.published else 'No' }}</span>{% else %}&mdash;{% endif %}</td>
+<td data-job-elapsed>{{ job.elapsed_seconds // 60 }}m {{ job.elapsed_seconds % 60 }}s</td>
+<td><div class="commerce-job-results"><span data-job-error>{{ job.error_message or (job.error_code|replace('_',' ') if job.error_code else '') }}</span>{% if job.kind=='catalog' %}<a class="text-link" data-job-catalog href="{{ url_for('commerce.job_detail',client_id=client_id,job_id=job.id) }}" {% if not job.published %}hidden{% endif %}>View</a>{% endif %}{% if job.kind=='inventory' and not job.inventory_preview %}<a class="text-link" data-job-catalog href="{{ url_for('commerce.results',client_id=client_id,kind='inventory',run_id=job.id) }}" {% if not job.published %}hidden{% endif %}>View</a>{% endif %}{% if job.kind=='test_connection' and data.admin %}<a class="text-link" data-job-connection-sample href="{{ url_for('commerce.connection_sample',client_id=client_id,job_id=job.id) }}" {% if not job.connection_sample_available %}hidden{% endif %}>View sample</a>{% endif %}{% if job.inventory_preview %}<a class="text-link" data-job-inventory-preview href="{{ url_for('commerce.inventory_preview',client_id=client_id,job_id=job.id) }}" {% if not job.preview_available %}hidden{% endif %}>View sample</a>{% endif %}</div></td>
+<td><div class="commerce-job-actions">{% if data.admin and job.status in ('queued','running') %}<form data-job-cancel method="post" action="{{ url_for('commerce.cancel_job',client_id=client_id,job_id=job.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="text-button">Cancel</button></form>{% endif %}
+{% if job.kind in ('catalog','inventory') and not job.inventory_preview and job.may_resume %}<form data-job-resume {% if not job.can_resume %}hidden{% endif %} method="post" action="{{ url_for('commerce.resume_job',client_id=client_id,job_id=job.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="text-button">Resume</button></form>{% endif %}</div></td></tr>
+{% else %}<tr><td colspan="12">No jobs match these filters.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% set paging=data.job_pagination %}
+<div class="table-pagination"><span>{{ paging.start }}&ndash;{{ paging.end }} of {{ paging.total }} jobs</span><div>
+{% if paging.page>1 %}<a data-job-page href="{{ url_for('commerce.home',client_id=client_id,tab='jobs',job_search=data.job_filters.search,job_period=data.job_filters.period,job_page=paging.page-1,_anchor='jobs') }}">Previous</a>{% endif %}
+{% if paging.page<paging.pages %}<a data-job-page href="{{ url_for('commerce.home',client_id=client_id,tab='jobs',job_search=data.job_filters.search,job_period=data.job_filters.period,job_page=paging.page+1,_anchor='jobs') }}">Next</a>{% endif %}
+</div></div>
+</div>

@@ -1,0 +1,251 @@
+{
+  "platform": "shopify",
+  "version": "product-template-2026-11",
+  "source_sha256": "f41b9562b9d9d951ff8f8184f7fe24e738304339d3e24104fc5c265fa00d28ff",
+  "columns": [
+    {
+      "name": "Title",
+      "required": true
+    },
+    {
+      "name": "URL handle",
+      "required": true
+    },
+    {
+      "name": "Description",
+      "required": false
+    },
+    {
+      "name": "Vendor",
+      "required": false
+    },
+    {
+      "name": "Product category",
+      "required": false
+    },
+    {
+      "name": "Type",
+      "required": false
+    },
+    {
+      "name": "Tags",
+      "required": false
+    },
+    {
+      "name": "Published on online store",
+      "required": false
+    },
+    {
+      "name": "Status",
+      "required": false
+    },
+    {
+      "name": "SKU",
+      "required": true
+    },
+    {
+      "name": "Variant Barcodes",
+      "required": false
+    },
+    {
+      "name": "Option1 name",
+      "required": true
+    },
+    {
+      "name": "Option1 value",
+      "required": true
+    },
+    {
+      "name": "Option1 Linked To",
+      "required": false
+    },
+    {
+      "name": "Option2 name",
+      "required": false
+    },
+    {
+      "name": "Option2 value",
+      "required": false
+    },
+    {
+      "name": "Option2 Linked To",
+      "required": false
+    },
+    {
+      "name": "Option3 name",
+      "required": false
+    },
+    {
+      "name": "Option3 value",
+      "required": false
+    },
+    {
+      "name": "Option3 Linked To",
+      "required": false
+    },
+    {
+      "name": "Price",
+      "required": true
+    },
+    {
+      "name": "Compare-at price",
+      "required": false
+    },
+    {
+      "name": "Cost per item",
+      "required": false
+    },
+    {
+      "name": "Charge tax",
+      "required": false
+    },
+    {
+      "name": "Tax code",
+      "required": false
+    },
+    {
+      "name": "Unit price total measure",
+      "required": false
+    },
+    {
+      "name": "Unit price total measure unit",
+      "required": false
+    },
+    {
+      "name": "Unit price base measure",
+      "required": false
+    },
+    {
+      "name": "Unit price base measure unit",
+      "required": false
+    },
+    {
+      "name": "Inventory tracker",
+      "required": false
+    },
+    {
+      "name": "Inventory quantity",
+      "required": false
+    },
+    {
+      "name": "Continue selling when out of stock",
+      "required": false
+    },
+    {
+      "name": "Weight value (grams)",
+      "required": false
+    },
+    {
+      "name": "Weight unit for display",
+      "required": false
+    },
+    {
+      "name": "Requires shipping",
+      "required": false
+    },
+    {
+      "name": "Fulfillment service",
+      "required": false
+    },
+    {
+      "name": "Product image URL",
+      "required": false
+    },
+    {
+      "name": "Image position",
+      "required": false
+    },
+    {
+      "name": "Image alt text",
+      "required": false
+    },
+    {
+      "name": "Variant image URL",
+      "required": false
+    },
+    {
+      "name": "Gift card",
+      "required": false
+    },
+    {
+      "name": "SEO title",
+      "required": false
+    },
+    {
+      "name": "SEO description",
+      "required": false
+    },
+    {
+      "name": "Color (product.metafields.shopify.color-pattern)",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Google product category",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Gender",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Age group",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Manufacturer part number (MPN)",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Ad group name",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Ads labels",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Condition",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Custom product",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Custom label 0",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Custom label 1",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Custom label 2",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Custom label 3",
+      "required": false
+    },
+    {
+      "name": "Google Shopping / Custom label 4",
+      "required": false
+    },
+    {
+      "name": "Packed product length",
+      "required": false
+    },
+    {
+      "name": "Packed product width",
+      "required": false
+    },
+    {
+      "name": "Packed product height",
+      "required": false
+    },
+    {
+      "name": "Packed product dimension unit",
+      "required": false
+    }
+  ]
+}

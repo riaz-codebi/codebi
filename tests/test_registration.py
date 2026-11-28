@@ -1,5 +1,6 @@
 """Self-registration uses the same real, isolated SQLAlchemy database as admin tests."""
 import time
+import re
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -17,6 +18,7 @@ class RegistrationTests(unittest.TestCase):
     def setUp(self):
         fixtures.AdministrationTests.setUp(self)
         self.app.config.update(SUPABASE_URL='https://example.supabase.co', SUPABASE_KEY='sb_publishable_test')
+        self.app.config['INQUIRY_MIN_SECONDS'] = 0
         sender = patch('app.auth.send_notification')
         self.send_confirmation = sender.start()
         self.addCleanup(sender.stop)
@@ -79,6 +81,8 @@ class RegistrationTests(unittest.TestCase):
         before = self.counts()
         values = {'name': 'Casey', 'email': 'casey@example.com', 'company': 'Example Co',
                   'details': 'Help with reporting', 'csrf_token': self.csrf()}
+        page = self.client.get('/contact')
+        values['inquiry_token'] = re.search(rb'name="inquiry_token" value="([^"]+)"', page.data).group(1).decode()
         self.assertEqual(self.client.post('/contact', data={**values, 'csrf_token': ''}).status_code, 400)
         self.assertEqual(self.client.post('/contact', data={**values, 'email': 'invalid'}).status_code, 422)
         self.send_inquiry_confirmation.assert_not_called()

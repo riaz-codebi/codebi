@@ -18,6 +18,9 @@ def create_app(test_config=None):
     app.config["SUPABASE_KEY"] = os.getenv("SUPABASE_KEY")
     app.config["SUPABASE_BUCKET"] = os.getenv("SUPABASE_BUCKET", "Code-BI")
     app.config['APP_DATABASE_URL'] = os.getenv('APP_DATABASE_URL')
+    app.config['COMMERCE_HUB_ENABLED'] = os.getenv('COMMERCE_HUB_ENABLED','false').lower() in ('true','1','yes')
+    app.config.update(INQUIRY_MIN_SECONDS=2, INQUIRY_SESSION_LIMIT=5,
+                      INQUIRY_EMAIL_LIMIT=3, INQUIRY_IP_LIMIT=10, INQUIRY_HOURLY_LIMIT=30)
     app.config['GOOGLE_PLACES_API_KEY'] = os.getenv('GOOGLE_PLACES_API_KEY')
     app.config['GOOGLE_PLACES_MONTHLY_LIMIT'] = int(os.getenv('GOOGLE_PLACES_MONTHLY_LIMIT', '500'))
     app.config['GOOGLE_PLACES_PER_MINUTE_LIMIT'] = int(os.getenv('GOOGLE_PLACES_PER_MINUTE_LIMIT', '10'))
@@ -114,6 +117,20 @@ def create_app(test_config=None):
     app.register_blueprint(administration)
     from app.scopes import scopes
     app.register_blueprint(scopes)
+    from app.commerce.routes import commerce
+    app.register_blueprint(commerce)
+
+    @app.context_processor
+    def inject_commerce():
+        from flask import g
+        links=[]
+        if app.config['COMMERCE_HUB_ENABLED'] and getattr(g,'portal_user',None):
+            try:
+                from app.commerce.services import registry
+                links=registry(g.portal_auth_user_id)
+            except Exception as exc:
+                app.logger.warning('Commerce navigation unavailable (%s).',type(exc).__name__)
+        return {'commerce_enabled':app.config['COMMERCE_HUB_ENABLED'],'commerce_clients':links}
 
     @app.context_processor
     def inject_auth():
@@ -128,6 +145,8 @@ def create_app(test_config=None):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
+    from app.local_worker import init_flask_cli_worker
+    init_flask_cli_worker(app)
     return app
 
 

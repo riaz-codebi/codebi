@@ -1,0 +1,13 @@
+{% extends 'portal/commerce/_layout.html' %}
+{% block portal_content %}
+<a class="back-link" href="{{ url_for('commerce.home',client_id=client_id,tab='jobs') }}">Back to jobs</a>
+<div class="page-heading"><div><span class="breadcrumb">{{ data.client.name }} / Commerce Hub</span><h1>Inventory sample</h1></div><span class="count-badge">First page only</span></div>
+{% include 'portal/commerce/tabs.html' %}
+<p class="commerce-notice">{{ data.sample.row_count }} rows captured from Orders &gt; Catalog. Pagination was not followed. This sample does not replace the complete inventory.</p>
+{% if data.sample.available_items_only %}<p class="commerce-coverage-note">Show Available Items Only is enabled.</p>{% endif %}
+<div class="table-panel"><div class="table-scroll"><table class="admin-table"><thead><tr>{% for column in data.sample.columns %}<th>{{ column.label }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in data.sample.rows %}<tr>{% for column in data.sample.columns %}<td>{{ row.source_values.get(column.label,'') }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div></div>
+<p class="commerce-coverage-note">{{ data.sample.quantity_meaning }}</p>
+{% if data.sample.pagination_controls %}<section class="form-panel"><h2 class="commerce-section-title">Pagination observed</h2><ul>{% for control in data.sample.pagination_controls %}<li>{{ control.label }} ({{ 'enabled' if control.enabled else 'disabled' }})</li>{% endfor %}</ul></section>{% endif %}
+{% endblock %}

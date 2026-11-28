@@ -1,0 +1,11 @@
+<div data-mapping-sample-content data-sample-product-id="{{ sample.product_id if sample else '' }}">
+{% if sample %}<p class="commerce-sample-name">{{ sample.name }}</p>
+<dl>{% for row in sample.rows %}<div data-sample-key="{{ row.key }}"><dt>{{ row.label }}</dt><dd>{{ row.value or 'Not available' }}</dd></div>{% endfor %}</dl>
+<template data-default-values-content>
+  <p class="commerce-default-values-product">Product {{ sample.product_id }} &middot; {{ sample.name }}</p>
+  <div class="table-scroll"><table class="admin-table commerce-default-values-table"><thead><tr><th>Option</th><th>What it does</th><th>Sample value</th></tr></thead><tbody>
+  {% for row in sample.default_values %}<tr><td>{{ row.option }}</td><td>{{ row.description }}<p class="commerce-default-example"><strong>Example:</strong> {{ row.example }}</p></td><td>{{ row.value or 'Not available' }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</template>
+{% else %}<p>No published products are available for a sample yet.</p>{% endif %}
+</div>

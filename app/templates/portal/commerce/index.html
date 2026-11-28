@@ -1,0 +1,44 @@
+{% extends 'portal/commerce/_layout.html' %}
+{% block portal_content %}
+{% macro client_row(client) %}
+        <tr data-commerce-search-row data-client-name="{{ client.name }}" data-client-features='{{ client.features|tojson }}' {% if client.client_active %}data-commerce-client-row{% endif %}>
+            <td>{% if client.client_active %}<a class="row-title" data-commerce-client-link href="{{ url_for('commerce.home',client_id=client.id) }}">{{ client.name }}</a>{% else %}<span class="row-title">{{ client.name }}</span><small>Client inactive</small>{% endif %}</td>
+            <td><div class="commerce-access-tags">{% for feature in ('catalog','inventory') if feature in client.features %}<span>{{ feature_labels[feature] }}</span>{% else %}<span class="commerce-no-access">No vendors enabled</span>{% endfor %}</div></td>
+            <td class="commerce-row-actions"><div>{% if portal_user.is_super_admin %}<button class="icon-button" type="button" data-commerce-settings data-client-name="{{ client.name }}" data-client-features='{{ client.features|tojson }}' data-access-url="{{ url_for('commerce.access',client_id=client.id) }}" aria-label="Settings for {{ client.name }}" title="Client access settings" aria-haspopup="dialog" aria-controls="commerce-access-dialog">{{ icon('gear') }}</button>{% endif %}{% if client.client_active %}<a class="icon-button" href="{{ url_for('commerce.home',client_id=client.id) }}" aria-label="Open Commerce Hub for {{ client.name }}" title="Open Commerce Hub">{{ icon('hub') }}</a>{% endif %}</div></td>
+        </tr>
+{% endmacro %}
+<div class="page-heading">
+    <div><span class="breadcrumb">Commercial tools</span><h1>Commerce Hub</h1></div>
+    {% if portal_user.is_super_admin %}<div class="commerce-heading-actions">
+        <a class="admin-button secondary-button" href="{{ url_for('commerce.configuration') }}">Templates &amp; mappings</a>
+        <button class="admin-button" type="button" data-commerce-add aria-haspopup="dialog" aria-controls="commerce-access-dialog" {% if not available_clients %}disabled{% endif %}>{{ icon('plus') }} Add client</button>
+    </div>{% endif %}
+</div>
+<form class="list-toolbar commerce-client-toolbar" method="get" data-commerce-search>
+    <div class="search-field"><label for="commerce-client-search">SEARCH CLIENTS</label><div><input id="commerce-client-search" name="q" type="search" value="{{ query }}" maxlength="200" placeholder="Client name"></div></div>
+    <div class="form-field"><label for="commerce-feature">Access</label><select id="commerce-feature" name="feature"><option value="">All vendors</option>{% for key in ('catalog','inventory') %}<option value="{{ key }}" {% if selected_feature == key %}selected{% endif %}>{{ feature_labels[key] }}</option>{% endfor %}</select></div>
+    <span class="count-badge" data-commerce-client-count role="status" aria-live="polite">{{ clients|length }} client{{ '' if clients|length == 1 else 's' }}</span>
+</form>
+<div class="table-panel"><div class="table-scroll"><table class="admin-table commerce-client-table">
+    <thead><tr><th>Client</th><th>Access</th><th class="commerce-row-actions">Actions</th></tr></thead>
+    <tbody>{% for client in clients %}{{ client_row(client) }}
+
+    {% else %}<tr><td colspan="3">{{ 'No clients match your search.' if query or selected_feature else 'No clients have Commerce Hub access yet.' }}</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<template data-commerce-all-clients>{% for client in all_clients %}{{ client_row(client) }}{% endfor %}</template>
+{% if portal_user.is_super_admin %}
+<dialog id="commerce-access-dialog" class="commerce-access-dialog" aria-labelledby="commerce-access-title">
+    <form method="post" id="commerce-access-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="commerce-dialog-heading"><h2 id="commerce-access-title">Client access</h2><button class="icon-button" type="button" data-commerce-close aria-label="Close client access">&times;</button></div>
+        <div class="form-field" id="commerce-client-picker"><label for="commerce-new-client">Client</label><select id="commerce-new-client" name="client_id"><option value="">Select client</option>{% for client in available_clients %}<option value="{{ client.id }}" data-access-url="{{ url_for('commerce.access',client_id=client.id) }}">{{ client.name }}</option>{% endfor %}</select></div>
+        <p class="commerce-selected-client" id="commerce-selected-client" hidden></p>
+        <div class="commerce-dialog-options">
+            <label class="commerce-enabled"><input type="checkbox" name="enabled" checked> Commerce Hub access enabled</label>
+            {% for key,label in feature_labels.items() %}<label><input type="checkbox" name="features" value="{{ key }}">{{ label }}</label>{% endfor %}
+        </div>
+        <div class="commerce-dialog-actions"><button class="admin-button secondary-button" type="button" data-commerce-close>Cancel</button><button class="admin-button" type="submit" id="commerce-access-save">Save</button></div>
+    </form>
+</dialog>
+{% endif %}
+{% endblock %}

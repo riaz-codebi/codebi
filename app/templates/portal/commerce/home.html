@@ -1,0 +1,83 @@
+{% extends 'portal/commerce/_layout.html' %}
+{% block portal_content %}
+<div data-commerce-home data-active-tab="{{ active_tab }}">
+<div class="page-heading"><div><span class="breadcrumb">{{ data.client.name }} / Commercial applications</span><h1>Commerce Hub</h1></div><a class="text-link" href="{{ url_for('commerce.home',client_id=client_id,tab=active_tab,job_search=data.job_filters.search if active_tab=='jobs' else None,job_period=data.job_filters.period if active_tab=='jobs' else None,job_page=data.job_pagination.page if active_tab=='jobs' else None) }}">Refresh</a></div>
+{% include 'portal/commerce/tabs.html' %}
+{% if active_tab=='connections' %}
+<section data-commerce-tab-panel="connections">
+<div class="commerce-notice">Test connection verifies sign-in and reads a first-page sample. Samples do not change your published catalog or inventory.</div>
+<h2 id="connections" class="commerce-section-title">Vendor connections</h2>
+<div class="commerce-grid commerce-connections-grid">
+{% for conn in data.connections %}
+<article class="form-panel commerce-connection-card">
+  <div class="page-heading"><h3>{{ conn.vendor }} &middot; {{ conn.type|capitalize }}</h3><span class="status-badge">{{ conn.status|replace('_',' ')|capitalize }}</span></div>
+  <p class="commerce-url">{{ conn.portal_url or 'Portal URL not configured' }}</p>
+  <div class="commerce-connection-sections">
+    <section aria-labelledby="connection-heading-{{ conn.id }}">
+      <h4 id="connection-heading-{{ conn.id }}">Connection</h4>
+      <div class="commerce-control-row">
+      {% if data.admin and 'connections' in data.features %}
+        <a class="admin-button secondary-button" href="{{ url_for('commerce.connection',client_id=client_id,connection_id=conn.id) }}">Connection settings</a>
+        <form method="post" action="{{ url_for('commerce.run_connection',client_id=client_id,connection_id=conn.id) }}" data-test-connection="{{ conn.type }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="admin-button secondary-button" type="submit" name="kind" value="test_connection" {% if not conn.portal_url or not conn.has_password or not conn.username or not conn.connector_ready %}disabled{% endif %}>Test connection</button>
+        </form>
+      {% endif %}
+      </div>
+    </section>
+    <section class="commerce-extraction-controls" aria-labelledby="extraction-heading-{{ conn.id }}">
+      <h4 id="extraction-heading-{{ conn.id }}">Extraction</h4>
+      {% if conn.category_selection_supported and 'catalog' in data.features %}
+      <form method="post" action="{{ url_for('commerce.run_connection',client_id=client_id,connection_id=conn.id) }}" class="commerce-catalog-form" data-catalog-selection data-extraction-kind="catalog">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="catalog">
+        <div class="commerce-catalog-fields">
+          <div class="form-field"><label for="catalog-mode-{{ conn.id }}">Products</label><select id="catalog-mode-{{ conn.id }}" name="catalog_mode"><option value="all">All products</option><option value="category">Selected category</option></select></div>
+          <div class="form-field commerce-catalog-category" data-catalog-category hidden><label for="catalog-category-{{ conn.id }}">Category</label><select id="catalog-category-{{ conn.id }}" name="category_id" data-searchable data-placeholder="Search categories" disabled><option value="">Select category</option>{% for category in conn.categories %}<option value="{{ category.value }}">{{ category.label }}</option>{% endfor %}</select></div>
+          <button class="admin-button commerce-extract-button" type="submit" {% if not conn.portal_url or not conn.has_password or not conn.username or not conn.extraction_ready %}disabled{% endif %}>Run extraction</button>
+        </div>
+      </form>
+      {% elif conn.type in data.features %}
+      <form method="post" action="{{ url_for('commerce.run_connection',client_id=client_id,connection_id=conn.id) }}" class="commerce-extraction-actions" data-extraction-kind="{{ conn.type }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="admin-button commerce-extract-button" type="submit" name="kind" value="{{ conn.type }}" {% if not conn.portal_url or not conn.has_password or not conn.username or not conn.extraction_ready %}disabled{% endif %}>Run extraction</button>
+      </form>
+      {% endif %}
+    </section>
+  </div>
+</article>
+{% else %}<div class="form-panel">Ask a CodeBI administrator to enable the vendor connections.</div>{% endfor %}
+</div>
+</section>
+<dialog id="commerce-connection-test-dialog" class="commerce-access-dialog" aria-labelledby="commerce-test-title">
+  <div class="commerce-dialog-heading"><h2 id="commerce-test-title">Test connection and sample data</h2></div>
+  <p>We will verify the sign-in credentials and download the first page of <span data-test-connection-type></span> sample data. This confirms that the connection works and data can be downloaded.</p>
+  <p>Your current catalog and inventory will not be changed.</p>
+  <p data-test-inventory-note hidden>Only available inventory items will be included.</p>
+  <div class="commerce-dialog-actions"><button type="button" class="admin-button secondary-button" data-test-cancel autofocus>Cancel</button><button type="button" class="admin-button" data-test-confirm>Test connection</button></div>
+</dialog>
+<dialog id="commerce-extraction-dialog" class="commerce-access-dialog commerce-extraction-dialog" aria-labelledby="commerce-extraction-title" aria-describedby="commerce-extraction-warning">
+  <div class="commerce-dialog-heading"><h2 id="commerce-extraction-title">Confirm extraction</h2></div>
+  <p id="commerce-extraction-warning">Extraction is resource-intensive and may take some time. On successful completion, it will replace the current <span data-extraction-scope>catalog data</span>. There is no undo action in the portal.</p>
+  <p data-extraction-inventory-note hidden>Only available items will be downloaded. Items absent from the completed download will no longer appear in current inventory. Do you want to continue?</p>
+  <div class="commerce-dialog-actions"><button type="button" class="admin-button secondary-button" data-extraction-cancel autofocus>Cancel</button><button type="button" class="admin-button commerce-extract-button" data-extraction-confirm>Extract</button></div>
+</dialog>
+{% elif active_tab=='jobs' %}
+<section data-commerce-tab-panel="jobs">
+<h2 id="jobs" class="commerce-section-title">Jobs</h2>
+<form method="get" action="{{ url_for('commerce.home',client_id=client_id) }}" class="form-panel commerce-job-filters" data-job-filters data-jobs-url="{{ url_for('commerce.job_history',client_id=client_id) }}">
+<input type="hidden" name="tab" value="jobs">
+<div class="form-field"><label for="job-search">Search jobs</label><input id="job-search" type="search" name="job_search" value="{{ data.job_filters.search }}" placeholder="Category, job ID or person" autocomplete="off"></div>
+<div class="form-field commerce-job-period"><label for="job-period">Run date</label><select id="job-period" name="job_period"><option value="">All time</option>{% for value,label in [('1','Last 24 hours'),('7','Last 7 days'),('30','Last 30 days')] %}<option value="{{ value }}" {% if data.job_filters.period==value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+<p class="commerce-job-filter-error" role="alert" data-job-filter-error hidden>Could not load jobs. Try again.</p>
+</form>
+<div data-commerce-jobs-panel aria-live="polite">{% include 'portal/commerce/jobs_table.html' %}</div>
+</section>
+{% elif active_tab=='exports' %}
+<section data-commerce-tab-panel="exports">
+{% include 'portal/commerce/exports.html' %}
+</section>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}{{ super() }}<script src="{{ url_for('static',filename='js/commerce-connection-test.js') }}"></script>{% if active_tab=='exports' %}<script src="{{ url_for('static',filename='js/commerce-export-mapping.js') }}"></script>{% endif %}<script src="{{ url_for('static',filename='js/searchable-select.js') }}"></script><script src="{{ url_for('static',filename='js/commerce-catalog-selection.js') }}"></script><script src="{{ url_for('static',filename='js/commerce-job-history.js') }}"></script><script src="{{ url_for('static',filename='js/commerce-tabs.js') }}"></script><script src="{{ url_for('static',filename='js/commerce-extraction-confirmation.js') }}"></script>{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'portal/commerce/_layout.html' %}
+{% block portal_content %}
+<a class="back-link" href="{{ url_for('commerce.home',client_id=client_id,tab='jobs') }}">Back to jobs</a>
+<div class="page-heading"><div><span class="breadcrumb">{{ data.client.name }} / Commerce Hub</span><h1>{{ data.sample.connection_type|capitalize }} connection verified</h1></div><span class="count-badge">First-page sample</span></div>
+{% include 'portal/commerce/tabs.html' %}
+<p class="commerce-notice">Sign-in and data access were verified. {{ data.sample.row_count }} items were downloaded from the first page. Your current catalog and inventory were not changed.</p>
+{% if data.sample.available_items_only %}<p class="commerce-coverage-note">Only available items from Shiloh inventory were downloaded.</p>{% endif %}
+<div class="table-panel"><div class="table-scroll"><table class="admin-table"><thead><tr>{% for column in data.sample.columns %}<th>{{ column.label }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in data.sample.rows %}<tr>{% for column in data.sample.columns %}<td>{{ row.source_values.get(column.label,'') }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

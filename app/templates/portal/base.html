@@ -33,6 +33,7 @@
 {% block content %}
 <div class="portal-layout" id="portalLayout"><aside class="portal-sidebar" id="portalSidebar" aria-label="Service Portal navigation"><span class="sidebar-caption">SERVICE PORTAL</span>
 <a class="portal-nav-item {{ 'active' if request.endpoint == 'portal.home' }}" href="{{ url_for('portal.home') }}">{{ icon('dashboard') }}<span>Dashboard</span></a>
+{% if commerce_enabled and (portal_user.is_super_admin or commerce_clients) %}<details class="nav-group" {% if request.blueprint == 'commerce' %}open{% endif %}><summary>{{ icon('building') }}<span>Commercial tools</span>{{ icon('chevron') }}</summary><a class="portal-subnav portal-subnav-with-icon {{ 'active' if request.blueprint == 'commerce' }}" href="{{ url_for('commerce.index') }}">{{ icon('hub') }}<span>Commerce Hub</span></a></details>{% endif %}
 {% if portal_user.is_super_admin %}<a class="portal-nav-item {{ 'active' if request.blueprint == 'scopes' }}" href="{{ url_for('scopes.index') }}">{{ icon('document') }}<span>Scopes of work</span></a>{% else %}{% for client in portal_user.clients %}<a class="portal-nav-item {{ 'active' if request.blueprint == 'scopes' and client_id is defined and client_id|string == client.id|string }}" href="{{ url_for('scopes.index', client_id=client.id) }}">{{ icon('document') }}<span>Scopes of work{% if portal_user.clients|length > 1 %}<small>{{ client.name }}</small>{% endif %}</span></a>{% endfor %}{% endif %}
 {% if portal_user.is_super_admin %}<details class="nav-group" {% if request.endpoint != 'portal.home' %}open{% endif %}><summary>{{ icon('settings') }}<span>Primary Administration</span>{{ icon('chevron') }}</summary>
 <a class="portal-subnav {{ 'active' if request.endpoint in ('administration.clients', 'administration.client_form') }}" href="{{ url_for('administration.clients') }}">Clients</a><a class="portal-subnav {{ 'active' if request.endpoint in ('administration.users', 'administration.user_form') }}" href="{{ url_for('administration.users') }}">Users</a><a class="portal-subnav {{ 'active' if request.endpoint == 'administration.inquiries' }}" href="{{ url_for('administration.inquiries') }}">Inquiries</a></details>
@@ -44,7 +45,7 @@
 </form>
 {% endif %}
 <div class="sidebar-footer">CodeBI Solutions<small>Consulting &amp; technology</small></div></aside>
-<section class="portal-content">{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="portal-notice {{ category }}" role="status">{{ message }}</div>{% endfor %}{% endwith %}{% block portal_content %}{% endblock %}</section></div>
+<section class="portal-content">{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="portal-notice {{ category }}" role="status" {% if category == 'success' and request.blueprint == 'commerce' %}data-auto-dismiss="4000"{% endif %}>{{ message }}{% if category == 'success' and request.blueprint == 'commerce' %}<button type="button" data-dismiss-notice aria-label="Dismiss notification">&times;</button>{% endif %}</div>{% endfor %}{% endwith %}{% block portal_content %}{% endblock %}</section></div>
 {% endblock %}
 {% block site_footer %}{% endblock %}
 {% block extra_scripts %}<script src="{{ url_for('static', filename='js/portal.js') }}"></script>{% endblock %}

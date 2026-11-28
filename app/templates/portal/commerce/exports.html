@@ -1,0 +1,15 @@
+<div class="page-heading"><h2 class="commerce-section-title">Exports</h2>
+{% if destinations.internal and destinations.available %}<button type="button" class="admin-button secondary-button" data-open-export-destination>Add export</button>{% endif %}</div>
+<div class="table-panel"><div class="table-scroll"><table class="admin-table"><thead><tr><th>Export</th><th>Mapping</th><th>Catalog</th><th class="commerce-row-actions">Actions</th></tr></thead><tbody>
+{% for row in destinations.rows %}<tr><td>{{ row.label }}</td><td>{{ 'Version ' ~ row.version if row.configured else 'Not configured' }}</td><td>{{ 'Published' if row.has_catalog else 'Not collected' }}</td>
+<td class="commerce-row-actions"><div>{% if destinations.admin %}<a class="icon-button" href="{{ url_for('commerce.export_mapping',client_id=client_id,destination_id=row.id) }}" title="Edit export mapping" aria-label="Edit mapping for {{ row.label }}">{{ icon('gear') }}</a>{% endif %}
+<form method="post" action="{{ url_for('commerce.download_catalog',client_id=client_id,destination_id=row.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-button" type="submit" title="Download CSV" aria-label="Download {{ row.label }} CSV" {% if not row.configured or not row.has_catalog %}disabled{% endif %}>{{ icon('download') }}</button></form></div></td></tr>
+{% else %}<tr><td colspan="4">No export destinations are enabled for this client.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% if destinations.internal and destinations.available %}
+<dialog class="commerce-access-dialog" id="export-destination-dialog" aria-labelledby="export-destination-title">
+<h2 id="export-destination-title">Add export</h2><form method="post" action="{{ url_for('commerce.add_export_destination',client_id=client_id) }}" data-export-destination-form>
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="vendor_id" data-destination-vendor>
+<div class="form-field"><label for="export-choice">Vendor and platform</label><select id="export-choice" name="template_id" required>{% for option in destinations.available %}<option value="{{ option.template_id }}" data-vendor="{{ option.vendor_id }}">{{ option.label }}</option>{% endfor %}</select></div>
+<div class="commerce-dialog-actions"><button type="button" class="admin-button secondary-button" data-close-export-destination>Cancel</button><button type="submit" class="admin-button">Add export</button></div></form></dialog>
+{% endif %}

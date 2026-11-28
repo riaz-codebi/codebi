@@ -1,0 +1,12 @@
+{% macro content_blocks(blocks) %}
+{% for block in blocks %}
+  {% if block.type=='list' %}
+    {% if block.ordered %}<ol start="{{ block.start|default(1)|int }}">{% else %}<ul>{% endif %}
+    {% for item in block['items'] %}<li>{{ item.text }}{% if item.children %}{{ content_blocks(item.children) }}{% endif %}</li>{% endfor %}
+    {% if block.ordered %}</ol>{% else %}</ul>{% endif %}
+  {% elif block.type=='table' %}
+    <div class="table-scroll"><table class="admin-table"><tbody>{% for row in block.rows %}<tr>{% for cell in row.cells %}{% if cell.header %}<th rowspan="{{ cell.rowspan|default(1)|int }}" colspan="{{ cell.colspan|default(1)|int }}">{{ cell.text }}</th>{% else %}<td rowspan="{{ cell.rowspan|default(1)|int }}" colspan="{{ cell.colspan|default(1)|int }}">{{ cell.text }}</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody></table></div>
+  {% elif block.type=='heading' %}<h4>{{ block.text }}</h4>
+  {% else %}<p>{{ block.text }}</p>{% endif %}
+{% endfor %}
+{% endmacro %}

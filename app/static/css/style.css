@@ -900,3 +900,6 @@ a.dashboard-card:hover { border-color: #b7c5ff; }
     .dashboard-banner h2 { font-size: 21px; }
     .search-field { flex: 1; min-width: 170px; }
 }
+
+/* Off-screen bot field: excluded from keyboard and assistive navigation. */
+.inquiry-trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
